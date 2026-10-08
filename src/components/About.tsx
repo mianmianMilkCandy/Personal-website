@@ -169,7 +169,8 @@ export default function About() {
 
           <div className="about__bio">
             {profile.bio.map((paragraph, i) => (
-              <Reveal as="p" key={paragraph.slice(0, 16)} delay={stagger(i, 110)}>
+              /* key 用下标：原先取段落前 16 个字符，两段开头相同就会撞 key */
+              <Reveal as="p" key={i} delay={stagger(i, 110)}>
                 {paragraph}
               </Reveal>
             ))}
@@ -220,8 +221,9 @@ export default function About() {
                   </dt>
                   <dd>
                     <ul className="caps__items">
-                      {cap.items.map((item) => (
-                        <li key={item}>{item}</li>
+                      {/* 同一组里出现重复技术项时，用下标做 key 才不会撞 */}
+                      {cap.items.map((item, ii) => (
+                        <li key={ii}>{item}</li>
                       ))}
                     </ul>
                   </dd>

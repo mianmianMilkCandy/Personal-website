@@ -1,0 +1,216 @@
+{
+  "label": "after-slow4g",
+  "net": "slow4g",
+  "origin": "http://127.0.0.1:58935",
+  "chrome": "Chrome/154.0.8037.99",
+  "wallMs": 11359,
+  "badStatus": [
+    {
+      "url": "http://127.0.0.1:58935/media/portrait.jpg",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:58935/favicon.ico",
+      "status": 404
+    }
+  ],
+  "failedRequests": [],
+  "consoleErrors": [],
+  "jank": {
+    "frameCount": 231,
+    "scrollablePx": 5868,
+    "reachedBottom": true,
+    "lastSeen": 5868,
+    "durationMs": 2609,
+    "p50": 8.4,
+    "p95": 30.7,
+    "worst": 93.8,
+    "over32": 11,
+    "over50": 5,
+    "fps": 88.5,
+    "revealHidden": 0,
+    "revealTotal": 84,
+    "clsTotal": 0.00020387586805555556
+  },
+  "nav": {
+    "ttfb": 11,
+    "domInteractive": 197,
+    "domContentLoaded": 2976,
+    "load": 2976,
+    "transferSize": 3216
+  },
+  "paints": {
+    "first-paint": 964,
+    "first-contentful-paint": 4180
+  },
+  "perf": {
+    "lcp": 7820,
+    "lcpDesc": "img.project__art",
+    "cls": 0.00020387586805555556,
+    "longtasks": [
+      483
+    ],
+    "shifts": [
+      0.00020387586805555556
+    ]
+  },
+  "frozen": {
+    "lcp": 4348,
+    "lcpDesc": "h1.hero__title",
+    "cls": 0.00020387586805555556,
+    "longtasks": [
+      483
+    ]
+  },
+  "resources": [
+    {
+      "name": "https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap",
+      "type": "link",
+      "start": 195,
+      "dur": 310,
+      "transfer": 1248,
+      "decoded": 19233
+    },
+    {
+      "name": "/media/hero-cat.webp",
+      "type": "link",
+      "start": 195,
+      "dur": 2513,
+      "transfer": 212928,
+      "decoded": 212628
+    },
+    {
+      "name": "/assets/index-lAE2wX-I.js",
+      "type": "script",
+      "start": 196,
+      "dur": 2729,
+      "transfer": 259969,
+      "decoded": 259669
+    },
+    {
+      "name": "/assets/index-13QK0ztU.css",
+      "type": "link",
+      "start": 196,
+      "dur": 758,
+      "transfer": 39380,
+      "decoded": 39080
+    },
+    {
+      "name": "/media/sec-about.webp",
+      "type": "css",
+      "start": 3008,
+      "dur": 1744,
+      "transfer": 83338,
+      "decoded": 83038
+    },
+    {
+      "name": "/media/sec-projects.webp",
+      "type": "css",
+      "start": 3035,
+      "dur": 2162,
+      "transfer": 145610,
+      "decoded": 145310
+    },
+    {
+      "name": "/media/sec-closing.webp",
+      "type": "css",
+      "start": 3042,
+      "dur": 1923,
+      "transfer": 97994,
+      "decoded": 97694
+    },
+    {
+      "name": "/media/ambient-portrait.webp",
+      "type": "css",
+      "start": 3044,
+      "dur": 210,
+      "transfer": 2012,
+      "decoded": 1712
+    },
+    {
+      "name": "/media/portrait.jpg",
+      "type": "img",
+      "start": 3503,
+      "dur": 161,
+      "transfer": 303,
+      "decoded": 3
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 3520,
+      "dur": 199,
+      "transfer": 303,
+      "decoded": 3
+    },
+    {
+      "name": "/media/card-01.webp",
+      "type": "img",
+      "start": 6575,
+      "dur": 428,
+      "transfer": 51604,
+      "decoded": 51304
+    },
+    {
+      "name": "/media/card-02.webp",
+      "type": "img",
+      "start": 6998,
+      "dur": 767,
+      "transfer": 90244,
+      "decoded": 89944
+    },
+    {
+      "name": "/media/card-03.webp",
+      "type": "img",
+      "start": 7298,
+      "dur": 627,
+      "transfer": 64564,
+      "decoded": 64264
+    }
+  ],
+  "byExt": {
+    "(none)": {
+      "n": 1,
+      "transfer": 1248,
+      "decoded": 19233
+    },
+    ".webp": {
+      "n": 8,
+      "transfer": 748294,
+      "decoded": 745894
+    },
+    ".js": {
+      "n": 1,
+      "transfer": 259969,
+      "decoded": 259669
+    },
+    ".css": {
+      "n": 1,
+      "transfer": 39380,
+      "decoded": 39080
+    },
+    ".jpg": {
+      "n": 1,
+      "transfer": 303,
+      "decoded": 3
+    },
+    ".ico": {
+      "n": 1,
+      "transfer": 303,
+      "decoded": 3
+    }
+  },
+  "fontCount": 5,
+  "fonts": [
+    "Inter Tight 400",
+    "Inter Tight 500",
+    "Inter Tight 600",
+    "JetBrains Mono 400",
+    "JetBrains Mono 500"
+  ],
+  "domNodes": 499,
+  "revealHidden": 0,
+  "revealTotal": 84,
+  "cursorEnabled": true,
+  "rafIdlePerSec": 0
+}

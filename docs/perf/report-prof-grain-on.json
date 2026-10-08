@@ -1,0 +1,279 @@
+{
+  "label": "prof-grain-on",
+  "net": "none",
+  "origin": "http://127.0.0.1:54103",
+  "chrome": "Chrome/154.0.8037.99",
+  "wallMs": 8532,
+  "badStatus": [
+    {
+      "url": "http://127.0.0.1:54103/media/portrait.jpg",
+      "status": 404
+    },
+    {
+      "url": "http://127.0.0.1:54103/favicon.ico",
+      "status": 404
+    }
+  ],
+  "failedRequests": [],
+  "consoleErrors": [],
+  "jank": {
+    "frameCount": 286,
+    "scrollablePx": 5868,
+    "reachedBottom": true,
+    "lastSeen": 5868,
+    "durationMs": 2613,
+    "p50": 8.3,
+    "p95": 11,
+    "worst": 42.3,
+    "over32": 5,
+    "over50": 0,
+    "fps": 109.4,
+    "revealHidden": 0,
+    "revealTotal": 84,
+    "clsTotal": 0
+  },
+  "nav": {
+    "ttfb": 13,
+    "domInteractive": 25,
+    "domContentLoaded": 174,
+    "load": 175,
+    "transferSize": 3216
+  },
+  "paints": {
+    "first-paint": 188,
+    "first-contentful-paint": 952
+  },
+  "perf": {
+    "lcp": 4444,
+    "lcpDesc": "img.project__art",
+    "cls": 0,
+    "longtasks": [
+      307
+    ],
+    "shifts": [],
+    "loaf": [
+      {
+        "duration": 150,
+        "blocking": 0,
+        "scriptTotal": 26,
+        "scripts": [
+          {
+            "dur": 26,
+            "invoker": "http://127.0.0.1:54103/assets/index-lAE2wX-I.js",
+            "src": "index-lAE2wX-I.js"
+          }
+        ]
+      },
+      {
+        "duration": 385,
+        "blocking": 0,
+        "scriptTotal": 0,
+        "scripts": []
+      },
+      {
+        "duration": 325,
+        "blocking": 259,
+        "scriptTotal": 15,
+        "scripts": [
+          {
+            "dur": 15,
+            "invoker": "MessagePort.onmessage",
+            "src": "index-lAE2wX-I.js"
+          }
+        ]
+      }
+    ]
+  },
+  "frozen": {
+    "lcp": 1096,
+    "lcpDesc": "h1.hero__title",
+    "cls": 0,
+    "longtasks": [
+      307
+    ],
+    "loaf": [
+      {
+        "duration": 150,
+        "blocking": 0,
+        "scriptTotal": 26,
+        "scripts": [
+          {
+            "dur": 26,
+            "invoker": "http://127.0.0.1:54103/assets/index-lAE2wX-I.js",
+            "src": "index-lAE2wX-I.js"
+          }
+        ]
+      },
+      {
+        "duration": 385,
+        "blocking": 0,
+        "scriptTotal": 0,
+        "scripts": []
+      },
+      {
+        "duration": 325,
+        "blocking": 259,
+        "scriptTotal": 15,
+        "scripts": [
+          {
+            "dur": 15,
+            "invoker": "MessagePort.onmessage",
+            "src": "index-lAE2wX-I.js"
+          }
+        ]
+      }
+    ],
+    "grain": "block/overlay"
+  },
+  "resources": [
+    {
+      "name": "https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap",
+      "type": "link",
+      "start": 23,
+      "dur": 124,
+      "transfer": 1248,
+      "decoded": 19233
+    },
+    {
+      "name": "/media/hero-cat.webp",
+      "type": "link",
+      "start": 23,
+      "dur": 19,
+      "transfer": 212928,
+      "decoded": 212628
+    },
+    {
+      "name": "/assets/index-lAE2wX-I.js",
+      "type": "script",
+      "start": 24,
+      "dur": 7,
+      "transfer": 259969,
+      "decoded": 259669
+    },
+    {
+      "name": "/assets/index-13QK0ztU.css",
+      "type": "link",
+      "start": 24,
+      "dur": 15,
+      "transfer": 39380,
+      "decoded": 39080
+    },
+    {
+      "name": "/media/sec-about.webp",
+      "type": "css",
+      "start": 192,
+      "dur": 5,
+      "transfer": 83338,
+      "decoded": 83038
+    },
+    {
+      "name": "/media/sec-projects.webp",
+      "type": "css",
+      "start": 212,
+      "dur": 12,
+      "transfer": 145610,
+      "decoded": 145310
+    },
+    {
+      "name": "/media/sec-closing.webp",
+      "type": "css",
+      "start": 214,
+      "dur": 4,
+      "transfer": 97994,
+      "decoded": 97694
+    },
+    {
+      "name": "/media/ambient-portrait.webp",
+      "type": "css",
+      "start": 215,
+      "dur": 8,
+      "transfer": 2012,
+      "decoded": 1712
+    },
+    {
+      "name": "/media/portrait.jpg",
+      "type": "img",
+      "start": 505,
+      "dur": 58,
+      "transfer": 303,
+      "decoded": 3
+    },
+    {
+      "name": "/favicon.ico",
+      "type": "other",
+      "start": 512,
+      "dur": 51,
+      "transfer": 303,
+      "decoded": 3
+    },
+    {
+      "name": "/media/card-01.webp",
+      "type": "img",
+      "start": 3762,
+      "dur": 4,
+      "transfer": 51604,
+      "decoded": 51304
+    },
+    {
+      "name": "/media/card-02.webp",
+      "type": "img",
+      "start": 4179,
+      "dur": 4,
+      "transfer": 90244,
+      "decoded": 89944
+    },
+    {
+      "name": "/media/card-03.webp",
+      "type": "img",
+      "start": 4487,
+      "dur": 4,
+      "transfer": 64564,
+      "decoded": 64264
+    }
+  ],
+  "byExt": {
+    "(none)": {
+      "n": 1,
+      "transfer": 1248,
+      "decoded": 19233
+    },
+    ".webp": {
+      "n": 8,
+      "transfer": 748294,
+      "decoded": 745894
+    },
+    ".js": {
+      "n": 1,
+      "transfer": 259969,
+      "decoded": 259669
+    },
+    ".css": {
+      "n": 1,
+      "transfer": 39380,
+      "decoded": 39080
+    },
+    ".jpg": {
+      "n": 1,
+      "transfer": 303,
+      "decoded": 3
+    },
+    ".ico": {
+      "n": 1,
+      "transfer": 303,
+      "decoded": 3
+    }
+  },
+  "fontCount": 5,
+  "fonts": [
+    "Inter Tight 400",
+    "Inter Tight 500",
+    "Inter Tight 600",
+    "JetBrains Mono 400",
+    "JetBrains Mono 500"
+  ],
+  "domNodes": 499,
+  "revealHidden": 0,
+  "revealTotal": 84,
+  "cursorEnabled": true,
+  "rafIdlePerSec": 0
+}

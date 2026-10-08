@@ -54,29 +54,44 @@ export default function DynamicCursor() {
     let pressed = false
     let moved = false
     let frame = 0
+    /** 首次落位 / 状态刚变过：下一帧必须写一次，即使此刻没有位移 */
+    let force = false
+    /** 上一帧写进 DOM 的类状态，用来跳过无意义的 classList 调用 */
+    let wasActive = false
+    let wasPressed = false
 
     const onMove = (e: PointerEvent) => {
       px = e.clientX
       py = e.clientY
-      if (moved) return
-      // 首次移动：环直接落位（避免从屏幕中心飞过来），此刻才隐藏原生光标
-      moved = true
-      rx = px
-      ry = py
-      document.documentElement.classList.add('has-cursor')
-      dot.style.opacity = '1'
-      ring.style.opacity = '1'
+      if (!moved) {
+        // 首次移动：环直接落位（避免从屏幕中心飞过来），此刻才隐藏原生光标
+        moved = true
+        rx = px
+        ry = py
+        document.documentElement.classList.add('has-cursor')
+        dot.style.opacity = '1'
+        ring.style.opacity = '1'
+        force = true
+      }
+      kick()
     }
 
     const onOver = (e: PointerEvent) => {
-      hoverScale = isInteractive(e.target) ? HOVER_SCALE : 1
+      const next = isInteractive(e.target) ? HOVER_SCALE : 1
+      if (next === hoverScale) return
+      hoverScale = next
+      kick()
     }
 
     const onDown = () => {
+      if (pressed) return
       pressed = true
+      kick()
     }
     const onUp = () => {
+      if (!pressed) return
       pressed = false
+      kick()
     }
 
     // 指针离开窗口 / 切到别的应用时把自定义光标藏起来，别让它僵在原地
@@ -90,20 +105,70 @@ export default function DynamicCursor() {
       ring.style.opacity = '1'
     }
 
-    const tick = () => {
-      // 环缓动追点；点永远精确在指针上
-      rx += (px - rx) * RING_EASE
-      ry += (py - ry) * RING_EASE
+    /**
+     * 一帧的渲染。返回 true 表示"还有位移没走完，需要下一帧"。
+     *
+     * 关键点：这个循环**不是常驻的**。原先 tick 无条件 rAF 自我续帧，
+     * 于是即使用户一动不动，也永远有 60fps 的回调在跑、每帧写两次 transform
+     * 与两次 classList —— 全站唯一一处"纯烧电"的开销。现在环追上点、
+     * 缩放也收敛之后循环就停；下一次 pointermove / 状态变化再 kick 起来。
+     * 视觉结果完全一致：停下来的那一帧已经把终值写进 DOM 了。
+     */
+    const render = () => {
+      let moving = false
+
+      const dx = px - rx
+      const dy = py - ry
+      if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
+        rx += dx * RING_EASE
+        ry += dy * RING_EASE
+        moving = true
+      } else if (rx !== px || ry !== py) {
+        // 收敛：直接吸附到精确位置，避免永远差 0.04px 而让循环停不下来
+        rx = px
+        ry = py
+        moving = true
+      }
 
       const target = hoverScale * (pressed ? PRESS_SCALE : 1)
-      scale += (target - scale) * 0.2
+      const ds = target - scale
+      if (Math.abs(ds) > 0.002) {
+        scale += ds * 0.2
+        moving = true
+      } else if (scale !== target) {
+        scale = target
+        moving = true
+      }
 
-      dot.style.transform = `translate3d(${px}px, ${py}px, 0)`
-      ring.style.transform = `translate3d(${rx.toFixed(2)}px, ${ry.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`
-      ring.classList.toggle('is-active', hoverScale > 1)
-      ring.classList.toggle('is-pressed', pressed)
+      // 点的位置永远精确在指针上；环走缓动。
+      // force 覆盖"首次落位"这一帧：那时没有位移、也没有缩放变化，
+      // 但两个 transform 必须先写一次，否则光标会僵在视口左上角。
+      if (moving || force) {
+        dot.style.transform = `translate3d(${px}px, ${py}px, 0)`
+        ring.style.transform = `translate3d(${rx.toFixed(2)}px, ${ry.toFixed(2)}px, 0) scale(${scale.toFixed(3)})`
+        force = false
+      }
 
-      frame = requestAnimationFrame(tick)
+      const isActive = hoverScale > 1
+      if (isActive !== wasActive) {
+        ring.classList.toggle('is-active', isActive)
+        wasActive = isActive
+      }
+      if (pressed !== wasPressed) {
+        ring.classList.toggle('is-pressed', pressed)
+        wasPressed = pressed
+      }
+
+      return moving
+    }
+
+    const tick = () => {
+      frame = render() ? requestAnimationFrame(tick) : 0
+    }
+
+    /** 唤醒渲染循环（已经在跑就什么都不做） */
+    const kick = () => {
+      if (!frame) frame = requestAnimationFrame(tick)
     }
 
     window.addEventListener('pointermove', onMove, { passive: true })
@@ -112,7 +177,7 @@ export default function DynamicCursor() {
     window.addEventListener('pointerup', onUp, { passive: true })
     document.addEventListener('pointerleave', onLeave)
     document.addEventListener('pointerenter', onEnter)
-    frame = requestAnimationFrame(tick)
+    kick()
 
     return () => {
       cancelAnimationFrame(frame)

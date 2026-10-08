@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 
 import { profile } from '../data/profile'
 import { asset } from '../lib/asset'
-import { useLocalTime } from '../hooks/useLocalTime'
 import { useTheme, THEME_LABEL } from '../hooks/useTheme'
 import Icon from './Icon'
+import LocalClock from './LocalClock'
 import Reveal from './Reveal'
 import './Hero.css'
 
@@ -12,7 +12,19 @@ const ART_WEBP = asset('media/hero-cat.webp')
 const ART_JPG = asset('media/hero-cat.jpg')
 const ART_PORTRAIT_WEBP = asset('media/hero-cat-portrait.webp')
 const ART_PORTRAIT_JPG = asset('media/hero-cat-portrait.jpg')
-const HERO_VIDEO = asset('media/hero-loop.mp4')
+
+/**
+ * 可选循环视频的文件名（相对 public/media/）。
+ *
+ * 留空 = 站内没有视频，此时**根本不渲染 <video>**。
+ * 原因：public/media/ 下没有这个文件时，浏览器仍会为一个必定 404 的地址
+ * 发请求（preload="metadata" 也会真的去拉一次），白占一次往返、
+ * 在控制台留一条错误，还会让 React 多一次 setState。
+ *
+ * 要启用：把视频放到 public/media/ 下，然后把这行改成 'media/hero-loop.mp4'。
+ */
+const HERO_VIDEO_FILE: string = ''
+const HERO_VIDEO = HERO_VIDEO_FILE ? asset(HERO_VIDEO_FILE) : null
 
 export default function Hero() {
   const [imgOk, setImgOk] = useState(true)
@@ -21,7 +33,6 @@ export default function Hero() {
 
   const heroRef = useRef<HTMLElement>(null)
   const mediaRef = useRef<HTMLDivElement>(null)
-  const clock = useLocalTime()
   const { theme } = useTheme()
 
   // ① 鼠标跟随聚光：直接写 CSS 变量，避免每帧 setState 引发重渲染
@@ -62,23 +73,38 @@ export default function Hero() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     let frame = 0
+    // 首屏高度是 min-height:100svh 撑的，与视口绑定，不需要每帧量一次：
+    // 每帧读 offsetHeight 会在滚动里强制一次布局，这里改成只在 resize 时重量。
+    let heroHeight = hero.offsetHeight || 1
+    // 上一帧写进去的值。滚过首屏之后 p 会稳定在 1，这里就不再做无意义的写入
+    // （否则滚动过程中每一帧都会写一次 CSS 变量并让整棵 .hero__media 重新求值）。
+    let last = ''
 
     const update = () => {
       frame = 0
-      const h = hero.offsetHeight || 1
-      const p = Math.min(1, Math.max(0, window.scrollY / h))
-      media.style.setProperty('--parallax', `${(p * 8).toFixed(2)}%`)
+      const p = Math.min(1, Math.max(0, window.scrollY / heroHeight))
+      const next = `${(p * 8).toFixed(2)}%`
+      if (next === last) return
+      last = next
+      media.style.setProperty('--parallax', next)
     }
 
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
     }
 
+    const onResize = () => {
+      heroHeight = hero.offsetHeight || 1
+      onScroll()
+    }
+
     update()
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onResize)
     return () => {
       if (frame) cancelAnimationFrame(frame)
       window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onResize)
     }
   }, [])
 
@@ -113,7 +139,7 @@ export default function Hero() {
           </picture>
         ) : null}
 
-        {videoOk ? (
+        {HERO_VIDEO && videoOk ? (
           <video
             className={videoReady ? 'hero__video is-ready' : 'hero__video'}
             src={HERO_VIDEO}
@@ -127,7 +153,8 @@ export default function Hero() {
           />
         ) : null}
 
-        {!imgOk && !videoOk ? <div className="hero__fallback" /> : null}
+        {/* 画面兜底：没有视频时只看图片是否可用；有视频时两者都坏了才用 CSS 渐变兜底 */}
+        {!imgOk && (!HERO_VIDEO || !videoOk) ? <div className="hero__fallback" /> : null}
 
         <div className="hero__scrim" />
         <div className="hero__veil" />
@@ -192,10 +219,11 @@ export default function Hero() {
           </dl>
         </Reveal>
 
-        {/* 参考站左下角那行小字：压在首屏最底边，承载真实信息（场景 / 主题 / 时间） */}
+        {/* 参考站左下角那行小字：压在首屏最底边，承载真实信息（场景 / 主题 / 时间）。
+            时钟是独立叶子组件 —— 每秒只重渲染这一个文本节点，见 LocalClock.tsx。 */}
         <Reveal className="hero__scene-row" variant="fade" delay={240}>
           <p className="hero__scene mono">
-            SCENE 01 · {THEME_LABEL[theme]} · UTC+8 {clock}
+            SCENE 01 · {THEME_LABEL[theme]} · UTC+8 <LocalClock />
           </p>
         </Reveal>
       </div>

@@ -22,6 +22,7 @@ const SCENE_NO = { dusk: '01', day: '02' } as const
 
 export default function Nav() {
   const [stuck, setStuck] = useState(false)
+  const stuckRef = useRef(false)
   const progressRef = useRef<HTMLSpanElement>(null)
   const active = useActiveSection(NAV_IDS)
   const { theme, toggleTheme } = useTheme()
@@ -33,7 +34,14 @@ export default function Nav() {
     const update = () => {
       frame = 0
       const y = window.scrollY
-      setStuck((prev) => (prev === y > 24 ? prev : y > 24))
+
+      // 用 ref 先比一次再 setState：原先每帧都调 setStuck（靠 React 的
+      // "同值 bail-out" 兜底），仍然会走一遍调度器。这里连调度都省掉。
+      const nextStuck = y > 24
+      if (nextStuck !== stuckRef.current) {
+        stuckRef.current = nextStuck
+        setStuck(nextStuck)
+      }
 
       const max = document.documentElement.scrollHeight - window.innerHeight
       const ratio = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0

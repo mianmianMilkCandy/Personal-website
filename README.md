@@ -29,13 +29,17 @@ npm run preview    # 本地预览构建产物
 
 ```
 ├── index.html
-├── vite.config.ts          base: './'，产物可放任意子目录
+├── vite.config.ts          base: './'，产物可放任意子目录；构建期注入 meta CSP
 ├── tsconfig*.json          strict 模式，三份配置（root / app / node）
 ├── .gitattributes          统一 LF，避免跨平台整文件 diff
-├── CODE-REVIEW.md          代码审查报告（分级 + 证据 + 未审范围）
+├── CODE-REVIEW.md          第一轮代码审查（分级 + 证据 + 未审范围）
+├── PERF-REVIEW.md          第二轮：代码审查 + 性能实测 + 整体评分
+├── UI-REVIEW.md            视觉层审查与截图核对
+├── docs/perf/              实测原始数据（JSON）与版面/像素对账记录
 ├── scripts/
 │   └── build.mjs           安全构建：失败不破坏上一版 dist/
 ├── public/
+│   ├── _headers            完整安全响应头 + 缓存策略（能读它的托管平台生效）
 │   └── media/              ← 全部画作素材（见上方素材表）
 └── src/
     ├── main.tsx
@@ -47,15 +51,22 @@ npm run preview    # 本地预览构建产物
     │   ├── profile.ts      ← 个人信息（姓名、联系方式、经历、能力）
     │   └── projects.ts     ← 项目内容
     ├── lib/
-    │   ├── asset.ts        资源路径拼装
+    │   ├── asset.ts        资源路径拼装（asset / assetUrl 的区别见文件注释）
+    │   ├── clickShine.ts   按钮点击光影（文档级事件委托）
+    │   ├── sectionArt.ts   区块背景画 → --sec-art
     │   ├── stagger.ts      阶梯延迟（必须封顶，否则后面的元素像卡住）
     │   └── revealObserver.ts  全站共用的单一 IntersectionObserver
     ├── hooks/
     │   ├── useActiveSection.ts  导航高亮
-    │   ├── useLocalTime.ts      每秒时钟
+    │   ├── useLocalTime.ts      每秒时钟（只允许被 LocalClock 使用）
+    │   ├── useTheme.ts          主题（模块级外部 store）
+    │   ├── useCursorColor.ts    光标配色（同上）
     │   └── useCopy.ts           复制到剪贴板 + 反馈
     └── components/         每个组件自带同名 .css
         ├── Nav / Hero / About / Projects / Closing
+        ├── LocalClock        秒级时钟的叶子节点（防止首屏每秒重渲染）
+        ├── DynamicCursor     动态光标（收敛后主动停 rAF）
+        ├── CursorTint        导航里的光标配色控件
         ├── Icon              手写内联 SVG 图标集（+ 贴纸底 .tile）
         ├── EntryGate         首次访问的入场幕屏
         ├── SectionHead      全站统一区块抬头
@@ -65,7 +76,20 @@ npm run preview    # 本地预览构建产物
 
 ## 需要你填的内容
 
-个人信息全部集中在 **`src/data/profile.ts`**，项目内容在 **`src/data/projects.ts`**。
+> **后期改简历 / 简介 / 经历 / 技能 / 联系方式，只需要动两个文件 —— 不用碰任何组件：**
+
+| 想改什么 | 改哪个文件 | 对应字段 |
+| --- | --- | --- |
+| 姓名、英文名、职位、一句话定位 | **`src/data/profile.ts`** | `name` / `nameEn` / `role` / `roleEn` / `tagline` |
+| 首屏大标题、专注领域、所在城市 | 同上 | `heroGreeting`（当前未使用）/ `focus` / `location` |
+| 邮箱、电话、GitHub / 微信 / 博客 | 同上 | `email` / `phone` / `socials[]` |
+| 简历 PDF 下载按钮 | 同上 | `resumeUrl`（把 PDF 丢进 `public/`，填 `'./resume.pdf'`；留空则按钮不出现） |
+| 「关于我」正文（2–3 段） | 同上 | `bio[]` |
+| 工作 / 项目经历时间线 | 同上 | `timeline[]`（`period` / `org` / `role` / `detail`） |
+| 技能矩阵（能力 / Capabilities） | 同上 | `capabilities[]`（`group` + `items[]`） |
+| 精选项目卡片（含要点、指标、技术栈、链接） | **`src/data/projects.ts`** | `projects[]`；`placeholder: true` 是"占位内容·待替换"徽标的开关，填完删掉该行 |
+| 头像照片 | 不用改代码 | 把图片存成 `public/media/portrait.jpg` 即自动生效，失败时回落到 `portraitFallback` 字母 |
+
 工作区里的 `个人简介.txt` 是空文件，所以当前所有个人字段都是占位符。
 
 开发模式下左下角会有一个「占位内容 N 项」的提示条，点开就是待填清单；
@@ -76,8 +100,8 @@ npm run preview    # 本地预览构建产物
 
 | 文件名 | 用途 | 规格 / 体积 |
 | --- | --- | --- |
-| `hero-cat.webp` / `.jpg` | **横版首屏画作**（台阶上的猫，宽屏用） | 2.02:1 · 258 KB / 354 KB |
-| `hero-cat-portrait.webp` / `.jpg` | **竖版首屏画作**（同一张图的竖取景，猫居中） | 0.67:1 · 202 KB / 272 KB |
+| `hero-cat.webp` / `.jpg` | **横版首屏画作**（台阶上的猫，宽屏用） | 2.02:1 · 208 KB / 354 KB |
+| `hero-cat-portrait.webp` / `.jpg` | **竖版首屏画作**（同一张图的竖取景，猫居中） | 0.67:1 · 164 KB / 272 KB |
 | `ambient-portrait.webp` | **整页氛围层**小图 | 160px 预糊 · **1.7 KB** |
 | `ambient-blur.webp` | 入场幕屏背景小图 | 160px 预糊 · **0.7 KB** |
 | `sec-about.webp` | 「关于我」区块背后的画（回廊·横） | 1000px · 81 KB |
@@ -87,14 +111,21 @@ npm run preview    # 本地预览构建产物
 | `portrait.jpg` | 关于区块头像 | ⬜ 待补 · 4:5 竖构图，≥ 900×1125 |
 | `hero-loop.mp4` | 首屏背景**视频**（可选增强） | ⬜ 可选 · 1920×1080，8–15 秒循环，**≤ 4 MB** |
 
-**首屏实际下载量** = 横版 WebP 258 KB + 氛围层 1.7 KB ≈ **260 KB**
-（竖屏 202 KB；JPEG 只在浏览器不支持 WebP 时才拉）。
+**首屏实际下载量** = 横版 WebP 208 KB + 氛围层 1.7 KB ≈ **210 KB**
+（竖屏 164 KB；JPEG 只在浏览器不支持 WebP 时才拉）。
 区块画作与卡片画面都是滚动到才加载。
 
 > ⚠️ **区块画作与卡片画面的质量压得比首屏低得多**（q56 / q64），
 > 因为它们最终只有 ~20% 可见度或被色调薄膜盖住 —— 细节根本看不见。
 > 这一条把三张区块背景从 549 KB 压到了 318 KB，是纯赚。
-> **但首屏那张千万别照做**，它是全屏可见的，必须保持 q78。
+> **但首屏那张不能照这个档位做**，它是全屏可见的。
+
+> **首屏那张 WebP 现在用 q68（原为 q78）**，依据是一次实测标定：
+> q78 → 258 KB / q68 → 208 KB（−19.6%），两者在最高频的猫 / 石阶区域
+> 以 2 倍最近邻放大对照看不出差别（平均绝对误差 3.1/255，99 分位 17/255）。
+> 再往下压（q56）只多省 7%，但大片云与天空的渐变里开始出现可辨的块状噪声。
+> **这张画是 LCP 的主要成本，也是唯一值得单独调质量档的文件**；
+> 上限不要低于 68 —— 它会被 `cover` 放大 1.1~1.45 倍铺满视口，压缩噪声会一起放大。
 
 **响应式画作**由 `<picture>` 的媒体查询完成，每个断点都配 WebP + JPEG 两条：
 
@@ -106,11 +137,18 @@ npm run preview    # 本地预览构建产物
 非 WebP 浏览器会跳过 `type` 不匹配的那条，落到**同取景的 JPEG**上，
 而不是掉回横版被硬裁 —— 这是这份 fallback 链的关键。
 
-所有素材都由 `_repo/img/prep.py`（横版 + 氛围层）与 `_repo/img/prep2.py`
-（竖版 + 卡片裁切件）生成，换图时重跑即可。
+所有素材都由 `_repo/img/prep3.py` 生成（首屏横/竖版、三个区块背景、三张卡片画面、
+整页氛围层；`prep.py` / `prep2.py` 是前两轮的旧脚本，已被 prep3 取代），
+换图时重跑即可。首屏两张 WebP 的质量档是脚本顶部的 `HERO_Q`。
 
 **图层优先级**：背景图永远是底 → 视频若存在则播起来后淡入盖住图 → 两者都失败才出 CSS 动态底。
 所以「没放视频」不是缺失，只是没有那层增强。
+
+> ⚠️ 视频是**显式开关**，不是"放了文件就自动生效"：
+> `Hero.tsx` 顶部的 `HERO_VIDEO_FILE` 默认为空字符串，此时**根本不渲染 `<video>`**。
+> 原因是不存在该文件时，浏览器仍会为它发一次必定 404 的请求
+> （`preload="metadata"` 也会真的去拉），白占一次往返并在控制台留错误。
+> 要用视频：把文件放进 `public/media/`，再把 `HERO_VIDEO_FILE` 改成 `'media/hero-loop.mp4'`。
 
 视频转码参考（可选）：
 
@@ -339,6 +377,39 @@ ffmpeg -i input.mp4 -t 12 -an \
 - 滚动监听全部用 rAF 节流，进度条与聚光直接写 DOM 属性，不触发逐帧重渲染。
 - 项目卡的视觉带与首屏降级底仍是纯 CSS 生成；全站**只有首屏那一张背景图**是图片请求
   （WebP 优先 + JPEG 兜底 + `rel=preload`），且视频是可选增强。全站无第三方 JS。
+- **不得引入常驻动画循环**。秒级时钟是独立叶子组件
+  （`src/components/LocalClock.tsx`），动态光标在"环追上点、缩放收敛"之后
+  **会主动停掉 rAF**（`DynamicCursor.tsx` 里 `render()` 的返回值决定是否续帧）。
+  这两处曾经是全站仅有的持续开销：首屏每秒整棵重渲染 + 每秒 120 次空转 rAF。
+  改这两个文件时请保持"没有变化就不写 DOM、没有位移就停帧"的写法。
+- **实测数据与评分见 [PERF-REVIEW.md](PERF-REVIEW.md)**：真实 Chrome 下的
+  FCP/LCP/CLS/长帧归因/滚动帧间隔，以及逐元素几何对账（证明排版未变）。
+  测量夹具在 `_repo/perf/measure.mjs`（已 gitignore，仅本地）。
+
+## 安全响应头与 CSP
+
+安全策略分两层，缺一不可：
+
+**① meta CSP（生产构建自动注入）** —— `vite.config.ts` 里的 `cspMetaPlugin()`
+只在 `apply: 'build'` 时把 `Content-Security-Policy` 注入 `<head>` 最前面。
+dev 模式不受影响（Vite 的 HMR 走 ws 连接与注入脚本，提前套 CSP 会把开发体验搞坏）。
+走 meta 的原因是 **GitHub Pages 无法自定义响应头**，meta 是那里唯一的落点。
+
+**② `public/_headers`（完整响应头）** —— Netlify / Cloudflare Pages / 部分对象存储
+会读这个文件，它补上 meta **做不到**的那几条：`frame-ancestors`（规范明确忽略 meta 里的
+这条）、HSTS、`nosniff`、`Referrer-Policy`、`Permissions-Policy`、COOP、`X-Frame-Options`，
+以及缓存策略（`/assets/*` immutable 一年、HTML must-revalidate）。
+文件顶部注释里有等价的 nginx 写法。
+
+> 策略里必须放行的两项，原因写在 `vite.config.ts` 的注释里，不是偷懒：
+> `script-src 'unsafe-inline'`（`index.html` 里那段**同步**主题引导脚本必须是内联的，
+> 改外链会多一次阻塞往返并造成主题闪烁）、
+> `style-src 'unsafe-inline'`（React 的 `style` 属性注入了 `--sec-art` / `--tone-*` /
+> `--swatch`，禁掉会直接掉版式）。真正起作用的是其余部分：把脚本、连接、图片、
+> 框架的来源收窄到本站 + 字体 CDN，并封掉 object / base / form / frame。
+
+> ⚠️ `public/` 下的文件会原样发布。`_headers` 被不完全支持的托管方当作普通文件下载
+> 是无害的（2 KB 文本），但**不要**把内部文档放进 `public/`。
 
 ## 安全构建与回退（重要）
 
@@ -384,8 +455,13 @@ tsc -b                       失败 → 退出，dist 未动
 
 ### 代码审查
 
-见 **[CODE-REVIEW.md](CODE-REVIEW.md)**：按 阻断 / 建议 / 吹毛求疵 分级，
-含每条问题的证据、处置与理由，以及明确标注的**未审范围**。
+- **[CODE-REVIEW.md](CODE-REVIEW.md)** —— 第一轮：按 阻断 / 建议 / 吹毛求疵 分级，
+  重点是"处理失败且无法回退"这一类缺陷。
+- **[PERF-REVIEW.md](PERF-REVIEW.md)** —— 第二轮：代码审查 + 性能实测 + 整体评分
+  （安全 / 性能 / 排版三项分项与加权口径），含"排版是否被改动"的逐元素几何对账。
+- **[UI-REVIEW.md](UI-REVIEW.md)** —— 视觉层审查与截图核对。
+
+三份都明确标注了**未审 / 未验证范围**，不把"没测"写成"没问题"。
 
 ## 部署
 

@@ -109,8 +109,9 @@ export default function Projects() {
 
                   <div className="project__facts">
                     <ul className="project__detail">
+                      {/* 用下标做 key：要点文案可能出现重复句子，用文案当 key 会撞 */}
                       {project.detail.map((line, di) => (
-                        <Reveal as="li" key={line} delay={stagger(di, 65, 300)}>
+                        <Reveal as="li" key={di} delay={stagger(di, 65, 300)}>
                           {line}
                         </Reveal>
                       ))}
@@ -136,10 +137,11 @@ export default function Projects() {
                     ) : null}
 
                     <ul className="project__stack">
+                      {/* 同上：技术栈里重复出现同一项时下标更稳 */}
                       {project.stack.map((tech, si) => (
                         <Reveal
                           as="li"
-                          key={tech}
+                          key={si}
                           variant="fade"
                           delay={stagger(si, 45, 270)}
                         >

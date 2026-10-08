@@ -30,7 +30,6 @@ export type IconName =
   | 'leaf'
   | 'doc'
   | 'target'
-  | 'pulse'
   | 'star'
   | 'cursor'
   | 'arrowRight'
@@ -141,9 +140,6 @@ const GLYPHS: Record<IconName, ReactNode> = {
       <circle className="i-accent" cx="12" cy="12" r="4.1" />
       <circle cx="12" cy="12" r="1.05" fill="currentColor" stroke="none" />
     </>
-  ),
-  pulse: (
-    <path className="i-accent" d="M3.3 12h3.9l2.4-6.2 4.1 12.4 2.4-6.2h4.6" />
   ),
   star: (
     <path d="M12 3.7l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L12 3.7Z" />
