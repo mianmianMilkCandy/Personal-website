@@ -24,14 +24,17 @@ html.has-cursor * {
   transition: opacity var(--dur-2) var(--ease-out);
 }
 
-/* 小点：精确跟随，不缓动 —— 它承担"我到底指在哪"这件事 */
+/* 小点：精确跟随，不缓动 —— 它承担"我到底指在哪"这件事。
+   颜色走 --cur-color：默认是主题强调色，用户在导航里选了色板就变成那个颜色。
+   每处都写两行：上一行是 color-mix 不可用时的兜底，下一行生效则覆盖。 */
 .cur--dot {
   width: 6px;
   height: 6px;
   margin: -3px 0 0 -3px;
   border-radius: var(--r-full);
-  background: var(--accent);
+  background: var(--cur-color);
   box-shadow: 0 0 8px var(--accent-glow);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--cur-color) 34%, transparent);
 }
 
 /* 细环：缓动跟随 + 随状态缩放 —— 它承担"手感" */
@@ -40,6 +43,7 @@ html.has-cursor * {
   height: 34px;
   margin: -17px 0 0 -17px;
   border: 1px solid var(--accent-line);
+  border: 1px solid color-mix(in srgb, var(--cur-color) 42%, transparent);
   border-radius: var(--r-full);
   box-shadow: 0 6px 18px var(--shadow-soft);
   transition:
@@ -50,12 +54,13 @@ html.has-cursor * {
 
 /* 悬停在可点元素上：环变亮、填一层极淡的底，给出"这里能点"的反馈 */
 .cur--ring.is-active {
-  border-color: var(--accent);
+  border-color: var(--cur-color);
   background: var(--accent-glow);
+  background: color-mix(in srgb, var(--cur-color) 14%, transparent);
 }
 
 .cur--ring.is-pressed {
-  border-color: var(--accent);
+  border-color: var(--cur-color);
 }
 
 /* 系统要求减少动效时组件本身就不渲染；这里再兜一层，

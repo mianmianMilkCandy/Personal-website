@@ -136,62 +136,40 @@ export default function Hero() {
         <div className="hero__spotlight" />
       </div>
 
-      {/* 版式对齐参考站：左下文案块 + 右下玻璃卡 + 左下角 SCENE 小字 */}
+      {/* 版式对齐参考站：左下文案块（大标题 + 胶囊动作行）+ 底部 SCENE 小字
+          + 右下玻璃卡。眉标那一行（职位/英文名）已删除 —— 它与导航左上角的
+          字标重复，且"标题上方再加一个小标签"正是要避免的廉价感来源。 */}
       <div className="hero__inner">
         <div className="hero__lead">
           <Reveal variant="up">
-            <p className="hero__eyebrow mono">
-              <span
-                className="hero__dot"
-                data-tone={profile.statusTone}
-                aria-hidden="true"
-              />
-              {profile.roleEn}
-              <span className="hero__slash" aria-hidden="true">
-                /
-              </span>
-              {profile.nameEn}
-            </p>
-
             <h1 className="hero__title">
-              <span className="hero__title-line">{profile.heroGreeting}</span>
-              <span className="hero__title-line">
-                {profile.name}的主页
-                <span className="hero__title-dot">。</span>
-              </span>
+              {profile.name}的主页
+              <span className="hero__title-dot">。</span>
             </h1>
 
-            <p className="hero__tagline lead">{profile.tagline}</p>
+            <p className="hero__tagline">{profile.tagline}</p>
           </Reveal>
 
           <Reveal variant="up" delay={120}>
             <div className="hero__actions">
-              <a className="pill" href="#projects">
+              {/* 首屏这枚动作按钮按用户要求改成高透明度 + 手绘描边（= .pill--quiet 那套） */}
+              <a className="pill pill--quiet" href="#projects">
                 向下滚动进入
                 <Icon name="arrowDown" />
-              </a>
-              <a className="pill pill--quiet" href="#contact">
-                联系我
-                <Icon name="mail" />
               </a>
               <a className="hero__scrollhint" href="#about">
                 <span className="mono">Scroll Down</span>
               </a>
             </div>
           </Reveal>
-
-          <Reveal variant="fade" delay={240}>
-            <p className="hero__scene mono">
-              <Icon name="spark" className="hero__scene-icon" />
-              SCENE 01 · {THEME_LABEL[theme]} · UTC+8 {clock}
-            </p>
-          </Reveal>
         </div>
 
         <Reveal as="aside" className="hero__card glass" variant="scale" delay={180}>
+          {/* 标签从 Profile 改成 Welcome：原来标题里那行「欢迎来到，」
+              按用户要求删掉，只把"欢迎"这层意思挪到这个英文标签上。 */}
           <p className="hero__card-label mono">
             <Icon name="cat" className="hero__card-label-icon" />
-            Profile
+            Welcome
           </p>
           <p className="hero__card-name">{profile.name}</p>
           <p className="hero__card-role">{profile.role}</p>
@@ -212,14 +190,12 @@ export default function Hero() {
               <dd>{profile.focus}</dd>
             </div>
           </dl>
+        </Reveal>
 
-          <p className="hero__card-status mono">
-            <span
-              className="hero__dot"
-              data-tone={profile.statusTone}
-              aria-hidden="true"
-            />
-            {profile.status}
+        {/* 参考站左下角那行小字：压在首屏最底边，承载真实信息（场景 / 主题 / 时间） */}
+        <Reveal className="hero__scene-row" variant="fade" delay={240}>
+          <p className="hero__scene mono">
+            SCENE 01 · {THEME_LABEL[theme]} · UTC+8 {clock}
           </p>
         </Reveal>
       </div>

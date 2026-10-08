@@ -15,7 +15,9 @@
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r-3);
+  /* 卡片底走 50% 透明度（此前是 --ink-700 实色），让区块背景画透上来 */
   background: var(--ink-700);
+  background: color-mix(in srgb, var(--ink-700) 50%, transparent);
   transition: border-color var(--dur-2) var(--ease-out);
 }
 

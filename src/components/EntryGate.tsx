@@ -51,13 +51,26 @@ export default function EntryGate() {
     return () => window.clearTimeout(id)
   }, [leaving])
 
-  // 幕屏期间锁滚动，避免用户在"门"后面滚页面
+  // 幕屏期间：锁滚动 + 把背景设为 inert。
+  // 只锁 body 滚动是不够的 —— 幕屏声明了 role="dialog" aria-modal="true"，
+  // 那就得真的做到"焦点不会跑到门背后"：否则 Tab 一步就落到背后的导航链接上，
+  // 而那时焦点在视觉上完全看不见（门盖住了那一层）。
   useEffect(() => {
     if (!visible) return
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+
+    const background = Array.from(
+      document.querySelectorAll<HTMLElement>('main, header.nav, .skip-link'),
+    )
+    const wasInert = background.map((el) => el.hasAttribute('inert'))
+    background.forEach((el) => el.setAttribute('inert', ''))
+
     return () => {
       document.body.style.overflow = previous
+      background.forEach((el, i) => {
+        if (!wasInert[i]) el.removeAttribute('inert')
+      })
     }
   }, [visible])
 

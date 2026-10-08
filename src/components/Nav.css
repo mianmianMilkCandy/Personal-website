@@ -137,8 +137,8 @@
 .nav__cluster {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.85rem;
+  gap: 0.45rem;
+  padding: 0.34rem 0.7rem;
   border-radius: var(--r-full);
   color: var(--fg-2);
   transition:
@@ -158,31 +158,24 @@
 }
 
 .nav__cluster-icon .icon {
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 .nav__cluster-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
   white-space: nowrap;
-}
-
-.nav__cluster-sep {
-  color: var(--fg-4);
 }
 
 /* 两格小指示器：当前场景亮起 —— 替代参考站那条进度滑块 */
 .nav__cluster-dots {
   display: inline-flex;
   gap: 3px;
-  margin-left: 0.15rem;
+  margin-left: 0.1rem;
 }
 
 .nav__cluster-dots i {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: var(--r-full);
   background: var(--line-3);
   transition: background var(--dur-2) var(--ease-out);
@@ -192,8 +185,9 @@
   background: var(--accent);
 }
 
+/* 导航里的 CTA 比正文胶囊再小一档：它只需要在细条里站住 */
 .nav__cta {
-  padding: 0.7rem 1.15rem;
+  padding: 0.55rem 1.05rem;
 }
 
 /* ── 阅读进度：压在导航下边框上的一根强调色细线 ───────────────────────── */
@@ -217,12 +211,13 @@
 }
 
 @media (max-width: 760px) {
+  /* 窄屏只留"图标 + 场景点"：文字全部让位给控件本身 */
   .nav__brand-role,
-  .nav__cluster-sep,
-  .nav__cluster-label {
+  .nav__cluster-text {
     display: none;
   }
   .nav__cta {
-    padding: 0.65rem 0.9rem;
+    padding: 0.5rem 0.9rem;
+    gap: 0.35rem;
   }
 }

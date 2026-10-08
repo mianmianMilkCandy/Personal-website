@@ -32,6 +32,7 @@ export type IconName =
   | 'target'
   | 'pulse'
   | 'star'
+  | 'cursor'
   | 'arrowRight'
   | 'arrowDown'
 
@@ -146,6 +147,13 @@ const GLYPHS: Record<IconName, ReactNode> = {
   ),
   star: (
     <path d="M12 3.7l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8L12 3.7Z" />
+  ),
+  /* 鼠标指针：给"光标颜色"控件一个能一眼认出的图标 */
+  cursor: (
+    <>
+      <path d="M6.6 4.3v14.2l3.6-3.7 2.1 4.9 2.5-1.1-2.1-4.8 5.1-.6L6.6 4.3Z" />
+      <path className="i-accent" d="M6.6 4.3v14.2l3.6-3.7" />
+    </>
   ),
   arrowRight: (
     <path d="M4.6 12h14.2M13.2 6.4 18.8 12l-5.6 5.6" />

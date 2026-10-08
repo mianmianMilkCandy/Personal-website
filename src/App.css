@@ -9,6 +9,15 @@ main {
   display: block;
 }
 
+/* 手绘描边用的 SVG 滤镜定义容器（见 App.tsx 与 base.css）。
+   不能 display:none —— 那样浏览器会忽略这份滤镜定义，按钮的线就退回直线了。 */
+.sketch-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
 /* ── 开发模式占位提示（仅 DEV 构建存在） ──────────────────────────────── */
 
 .devnote {

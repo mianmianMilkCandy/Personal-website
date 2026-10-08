@@ -1,0 +1,75 @@
+/* ============================================================================
+   CursorTint · 光标配色控件（导航右上角）
+   ----------------------------------------------------------------------------
+   尺寸刻意压到 12px 圆点：它是"微观细节"级的控件，不该和导航争注意力。
+   颜色一律走 --swatch（由 TS 传入 var(--cur-tint-*) 或 var(--accent)），
+   本文件里没有任何字面色值。
+   ========================================================================== */
+
+.curtint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.36rem 0.62rem;
+  border-radius: var(--r-full);
+}
+
+.curtint__icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--fg-3);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.curtint:hover .curtint__icon {
+  color: var(--fg);
+}
+
+/* 色板圆点。命中区靠伪元素外扩到 ~18px，视觉仍然是 12px。 */
+.curtint__chip {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border-radius: var(--r-full);
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px var(--line-3);
+  transition:
+    transform var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
+}
+
+.curtint__chip::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: var(--r-full);
+}
+
+.curtint__chip:hover {
+  transform: scale(1.2);
+}
+
+/* 选中态：先垫一圈底色（≈玻璃面板的底）再套一圈同色描边，
+   这样"选中的是哪一个"在任何主题下都读得出来，而且不改变尺寸、不触发重排。 */
+.curtint__chip.is-on {
+  box-shadow:
+    0 0 0 2px var(--ink-900),
+    0 0 0 4px var(--swatch);
+}
+
+/* 触屏没有光标可改；reduced-motion 下 DynamicCursor 根本不渲染 —— 两种情况都藏掉 */
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .curtint {
+    display: none;
+  }
+}
+
+/* 窄窗口：整条导航的控件加起来会顶破右边界（实测 430px 宽溢出约 24px），
+   让"联系"这个真正的动作入口留下，光标配色让位。
+   触屏在上一段媒体查询里已经藏过了，这里只影响窄桌面窗口。 */
+@media (max-width: 620px) {
+  .curtint {
+    display: none;
+  }
+}

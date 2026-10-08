@@ -235,8 +235,11 @@ button {
 }
 
 /* ============================================================================
-   按钮：只有两种。主按钮（唯一强调色填充）+ 幽灵按钮（发丝描边）。
-   刻意不做渐变、不做大圆角、不做发光阴影。
+   按钮：两种。
+     · 主按钮（`.btn--primary`，唯一强调色填充）—— 全站留给"最重要那一个动作"；
+     · 手绘高透明按钮（`.pill--quiet` / `.btn--ghost`）—— 卡片里的动作与首屏滚动按钮，
+       底只留一点点、轮廓是手绘线，详见文件末尾那一节。
+   刻意不做渐变、不做大角、不做发光阴影。
    ========================================================================== */
 
 .btn {
@@ -286,14 +289,16 @@ button {
   --btn-bd: var(--accent-hover);
 }
 
-.btn--ghost:hover {
-  --btn-bd: var(--line-3);
-  --btn-bg: var(--hover-veil);
-}
-
 .btn:active {
   transform: translateY(1px);
 }
+
+/* ============================================================================
+   手绘高透明度按钮 + 点击光影
+   ----------------------------------------------------------------------------
+   样式本体在**文件末尾**那一节（必须排在 `.pill` 基础样式之后，
+   否则 `.pill { background: var(--pill-bg) }` 会把高透明底覆盖成实色胶囊）。
+   ========================================================================== */
 
 /* ============================================================================
    区块画作背景：每个区块背后压一张不同的画（由组件用 --sec-art 传入）。
@@ -353,8 +358,8 @@ button {
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.95rem 1.5rem;
+  gap: 0.5rem;
+  padding: 0.74rem 1.2rem;
   background: var(--pill-bg);
   color: var(--pill-fg);
   border: 1px solid var(--pill-bd);
@@ -377,21 +382,21 @@ button {
   transform: translateY(0);
 }
 
+/* 图标跟字号走，不额外放大 —— 全站控件都在"往小里收" */
 .pill .icon {
-  width: 1.1em;
-  height: 1.1em;
+  width: 1em;
+  height: 1em;
 }
 
+/* 手绘高透明度按钮：底色与手绘描边在文件末尾那一节成组定义（与 .btn--ghost 共用）。
+   这里只保留"玻璃模糊"这一件属于胶囊自己的事。 */
 .pill--quiet {
-  background: transparent;
   color: var(--fg);
-  border-color: var(--line-2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 .pill--quiet:hover {
-  border-color: var(--accent-line);
   filter: none;
 }
 
@@ -478,5 +483,96 @@ button {
   .reveal.is-in {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* ============================================================================
+   手绘高透明度按钮 + 点击光影
+   ----------------------------------------------------------------------------
+   用途：**卡片里的动作按钮与首屏的滚动按钮**（`.pill--quiet` / `.btn--ghost`）。
+   它们不该跟主按钮抢注意力，所以：
+     · 底色只留 12% 的主题底色（高透明度，底下的画能透上来）；
+     · 轮廓不用 `border`（那是机器画的直线），交给 `::before` 画一圈 1.5px 线，
+       再套一个 SVG 湍流位移滤镜（`#sketch-line`，定义在 App.tsx）把线抖出"手画"的味道。
+
+   三点取舍：
+   1. **滤镜只作用在描边层上**，文字保持锐利 —— 整块按钮加滤镜会把字也搅糊；
+   2. 用 `border-radius: inherit` 继承圆角，于是胶囊（全圆）与小圆角方形按钮共用一套；
+   3. 底越透、手绘线越轻，按钮就越"退后"，所以点击时必须给一次明确反馈：
+      从点击处散开的光影（`--fx/--fy` 由 src/lib/clickShine.ts 在 pointerdown 时写入）。
+
+   ⚠️ 这一节必须留在文件**末尾**：`.pill { background: var(--pill-bg) }`、`.btn`
+   的 `--btn-bg` 都在前面，同特异度下靠"后来者胜"，放到前面会被它们覆盖
+   （实测过一次：胶囊底仍是实色白，而文字已经变浅色 → 按钮上看不见字）。
+   ========================================================================== */
+
+.pill--quiet,
+.btn--ghost {
+  position: relative;
+  background: color-mix(in srgb, var(--ink-900) 12%, transparent);
+  border-color: transparent;
+  color: var(--fg);
+}
+
+.pill--quiet::before,
+.btn--ghost::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid var(--line-3);
+  border-radius: inherit;
+  pointer-events: none;
+  filter: url(#sketch-line);
+  transition: border-color var(--dur-2) var(--ease-out);
+}
+
+.pill--quiet:hover,
+.btn--ghost:hover {
+  background: color-mix(in srgb, var(--ink-900) 20%, transparent);
+}
+
+.pill--quiet:hover::before,
+.btn--ghost:hover::before {
+  border-color: var(--accent-line);
+}
+
+/* ── 点击光影：所有 .pill / .btn 共用 ──────────────────────────────────── */
+.pill::after,
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    130px circle at var(--fx, 50%) var(--fy, 50%),
+    color-mix(in srgb, var(--accent) 42%, transparent),
+    transparent 72%
+  );
+}
+
+.pill.is-shine::after,
+.btn.is-shine::after {
+  animation: clickShine var(--dur-3) var(--ease-out);
+}
+
+/* 描边同时亮一下：光影不只发生在按钮内部，轮廓也参与 */
+.pill--quiet.is-shine::before,
+.btn--ghost.is-shine::before {
+  border-color: var(--accent);
+}
+
+@keyframes clickShine {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  14% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.06);
   }
 }

@@ -65,13 +65,17 @@ export const profile = {
   /** Hero 的一句话主张：说清你解决什么问题，不要写"热爱编程" */
   tagline: '从数据库到像素，把想法做成能上线的产品。',
 
-  /** Hero 大标题第一行；第二行固定渲染成「{name}的主页。」 */
+  /** 首屏欢迎语。2026-10 起首屏标题只用一行「{name}的主页。」，
+      这句"欢迎来到，"按用户要求删掉了 —— 那层意思挪到了首屏玻璃卡的
+      WELCOME 标签上（Hero.tsx 里硬编码的那个英文标签）。
+      数据留着：要恢复标题第一行就在 Hero.tsx 的 h1 里加回来。 */
   heroGreeting: '欢迎来到，',
 
   /** Hero 玻璃卡里的「专注」一栏 */
   focus: 'Web · Full-Stack · AI',
 
-  /** Hero 右侧规格表：状态点会取 statusTone 的颜色 */
+  /** 合作状态。首屏玻璃卡目前不显示这一行（用户要求删掉）；
+      数据留着：要放回卡片就恢复 Hero.tsx 里 `hero__card-status` 那段和 Hero.css 里对应的状态点样式。 */
   status: '开放合作机会',
   statusTone: 'accent' as 'accent' | 'muted',
   location: '中国 · 城市待填',

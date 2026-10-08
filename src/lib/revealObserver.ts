@@ -4,6 +4,10 @@
    每个 .reveal 元素各建一个 observer 会在长页面上白白产生几十个观察器。
    这里用模块级单例：所有元素注册到同一个观察器，命中后立刻 unobserve，
    不产生持续回调开销。
+
+   除了观察器，observeReveal 还会自查一次"这个元素是不是本来就在首屏里" ——
+   观察器的 rootMargin 排除了视口下沿 12%，不滚动的那部分内容会永远等不到
+   交叉事件。细节见 observeReveal 里的注释。
    ========================================================================== */
 
 const REVEALED_CLASS = 'is-in'
@@ -39,5 +43,29 @@ export function observeReveal(el: Element): () => void {
   }
   const obs = getObserver()
   obs.observe(el)
-  return () => obs.unobserve(el)
+
+  // 首屏已经在视口里的元素，不交给观察器判入场。
+  // 原因：rootMargin 的下边距 -12% 是给"滚动才播"设计的，它把视口最下沿
+  // 那条带子排除在交叉区之外 —— 而首屏是不滚动的，落在那条带子里的元素
+  // （首屏最底边的 SCENE 小字、矮视口下的玻璃卡）会永远停在 opacity:0，
+  // 看起来就像"控件没渲染出来"。
+  //
+  // 首帧的布局还会变（字体替换、iframe 尺寸、图片撑开），所以连查几帧，
+  // 再补一次定时复查；命中任意一次就播入场，阶梯延迟照旧生效。
+  let frames = 3
+  const revealIfInView = () => {
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      el.classList.add(REVEALED_CLASS)
+      return
+    }
+    if (--frames > 0) requestAnimationFrame(revealIfInView)
+  }
+  requestAnimationFrame(revealIfInView)
+  const retry = window.setTimeout(revealIfInView, 700)
+
+  return () => {
+    window.clearTimeout(retry)
+    obs.unobserve(el)
+  }
 }

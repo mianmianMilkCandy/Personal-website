@@ -74,7 +74,8 @@
 .portrait__fallback {
   font-size: 2.75rem;
   letter-spacing: 0.14em;
-  color: var(--fg-4);
+  /* 大头字母也要能看清：--fg-4 只有 2.5:1，正文字号以上的也应该至少 3:1 */
+  color: var(--fg-3);
 }
 
 /* 四角准星：给照片一个"被标定过"的技术感 */

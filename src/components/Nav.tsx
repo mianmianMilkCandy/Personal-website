@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { profile } from '../data/profile'
 import { useActiveSection } from '../hooks/useActiveSection'
 import { useTheme, THEME_LABEL } from '../hooks/useTheme'
+import CursorTint from './CursorTint'
 import Icon from './Icon'
 import './Nav.css'
 
@@ -91,6 +92,9 @@ export default function Nav() {
         </ul>
 
         <div className="nav__actions">
+          {/* 光标配色控件：指针图标 + 一排色板圆点（悬停即预览、点击即生效） */}
+          <CursorTint />
+
           {/* 玻璃控件簇：参考站右上角那枚。这里装载"场景/主题"切换 */}
           <button
             type="button"
@@ -102,13 +106,7 @@ export default function Nav() {
             <span className="nav__cluster-icon" aria-hidden="true">
               <Icon name={theme === 'day' ? 'spark' : 'cloud'} />
             </span>
-            <span className="nav__cluster-text mono">
-              Scene {SCENE_NO[theme]}
-              <span className="nav__cluster-sep" aria-hidden="true">
-                ·
-              </span>
-              <span className="nav__cluster-label">{THEME_LABEL[theme]}</span>
-            </span>
+            <span className="nav__cluster-text mono">Scene {SCENE_NO[theme]}</span>
             <span className="nav__cluster-dots" aria-hidden="true">
               <i className={theme === 'dusk' ? 'is-on' : undefined} />
               <i className={theme === 'day' ? 'is-on' : undefined} />
