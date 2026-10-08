@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import { profile } from '../data/profile'
 import { useActiveSection } from '../hooks/useActiveSection'
-import { useCatEnabled } from '../hooks/useCatCompanion'
 import { useTheme, THEME_LABEL } from '../hooks/useTheme'
 import Icon from './Icon'
 import './Nav.css'
@@ -25,7 +24,6 @@ export default function Nav() {
   const progressRef = useRef<HTMLSpanElement>(null)
   const active = useActiveSection(NAV_IDS)
   const { theme, toggleTheme } = useTheme()
-  const { catEnabled, toggleCat } = useCatEnabled()
 
   // 吸顶状态 + 阅读进度：都用 rAF 节流，进度直接写 DOM，不引发重渲染
   useEffect(() => {
@@ -115,18 +113,6 @@ export default function Nav() {
               <i className={theme === 'dusk' ? 'is-on' : undefined} />
               <i className={theme === 'day' ? 'is-on' : undefined} />
             </span>
-          </button>
-
-          {/* 跟随小猫的开关：给不想被一只猫跟着的人一条退路 */}
-          <button
-            type="button"
-            className={catEnabled ? 'nav__cat is-on' : 'nav__cat'}
-            onClick={toggleCat}
-            aria-pressed={catEnabled}
-            title={catEnabled ? '关闭跟随的小猫' : '开启跟随的小猫'}
-          >
-            <Icon name="cat" />
-            <span className="sr-only">跟随的小猫</span>
           </button>
 
           <a className="pill nav__cta" href="#contact">

@@ -1,9 +1,9 @@
 import type { CSSProperties } from 'react'
 
 import About from './components/About'
-import CatCompanion from './components/CatCompanion'
 import Closing from './components/Closing'
 import DevNotice from './components/DevNotice'
+import DynamicCursor from './components/DynamicCursor'
 import EntryGate from './components/EntryGate'
 import Hero from './components/Hero'
 import Nav from './components/Nav'
@@ -49,8 +49,8 @@ export default function App() {
       {/* 入场幕屏：只对首次访问者显示，见 EntryGate.tsx 顶部说明 */}
       <EntryGate />
 
-      {/* 跟随光标的猫：只在精确指针 + 允许动效时渲染，导航栏可关 */}
-      <CatCompanion />
+      {/* 动态鼠标光标：只在精确指针 + 允许动效时启用 */}
+      <DynamicCursor />
 
       {import.meta.env.DEV && UNFILLED.length > 0 ? <DevNotice /> : null}
     </>

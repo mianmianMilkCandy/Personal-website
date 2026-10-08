@@ -192,35 +192,6 @@
   background: var(--accent);
 }
 
-/* 跟随小猫的开关：默认开启时描边点亮，关闭时退回灰 */
-.nav__cat {
-  display: grid;
-  place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border: 1px solid var(--line);
-  border-radius: var(--r-full);
-  color: var(--fg-4);
-  transition:
-    color var(--dur-1) var(--ease-out),
-    border-color var(--dur-1) var(--ease-out);
-}
-
-.nav__cat .icon {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.nav__cat:hover {
-  color: var(--fg-2);
-  border-color: var(--line-3);
-}
-
-.nav__cat.is-on {
-  color: var(--accent-text);
-  border-color: var(--accent-line);
-}
-
 .nav__cta {
   padding: 0.7rem 1.15rem;
 }

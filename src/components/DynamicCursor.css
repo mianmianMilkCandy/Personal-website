@@ -1,0 +1,71 @@
+/* ============================================================================
+   DynamicCursor · 动态鼠标光标
+   ----------------------------------------------------------------------------
+   z-index 95：必须是全站最高层（在颗粒层 60、开发提示 70、入场幕屏 80 之上），
+   光标被任何东西盖住都会瞬间显得"坏了"。
+
+   隐藏原生光标靠 html.has-cursor 这个由 JS 加上的类 ——
+   写死在 CSS 里的风险是：JS 一旦没跑起来，页面上就真的没有鼠标了。
+   ========================================================================== */
+
+html.has-cursor,
+html.has-cursor * {
+  cursor: none;
+}
+
+.cur {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+/* 小点：精确跟随，不缓动 —— 它承担"我到底指在哪"这件事 */
+.cur--dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* 细环：缓动跟随 + 随状态缩放 —— 它承担"手感" */
+.cur--ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-full);
+  box-shadow: 0 6px 18px var(--shadow-soft);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    background var(--dur-2) var(--ease-out);
+}
+
+/* 悬停在可点元素上：环变亮、填一层极淡的底，给出"这里能点"的反馈 */
+.cur--ring.is-active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.cur--ring.is-pressed {
+  border-color: var(--accent);
+}
+
+/* 系统要求减少动效时组件本身就不渲染；这里再兜一层，
+   万一 enable 判定失效，也至少不留一个跟动的环 */
+@media (prefers-reduced-motion: reduce) {
+  .cur {
+    display: none;
+  }
+  html.has-cursor,
+  html.has-cursor * {
+    cursor: auto;
+  }
+}
