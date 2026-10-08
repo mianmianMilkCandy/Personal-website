@@ -80,7 +80,7 @@
   inset: -10%;
   background:
     radial-gradient(58% 52% at 22% 28%, var(--accent-glow), transparent 62%),
-    radial-gradient(54% 48% at 78% 70%, rgba(59, 130, 246, 0.14), transparent 60%),
+    radial-gradient(54% 48% at 78% 70%, var(--accent-glow), transparent 60%),
     linear-gradient(160deg, var(--media-base-a), var(--media-base-b));
   animation: heroDrift 26s var(--ease-in-out) infinite alternate;
 }

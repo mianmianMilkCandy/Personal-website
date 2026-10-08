@@ -31,8 +31,12 @@ npm run preview    # 本地预览构建产物
 ├── index.html
 ├── vite.config.ts          base: './'，产物可放任意子目录
 ├── tsconfig*.json          strict 模式，三份配置（root / app / node）
+├── .gitattributes          统一 LF，避免跨平台整文件 diff
+├── CODE-REVIEW.md          代码审查报告（分级 + 证据 + 未审范围）
+├── scripts/
+│   └── build.mjs           安全构建：失败不破坏上一版 dist/
 ├── public/
-│   └── media/              ← 放 hero-loop.mp4 与 portrait.jpg（见其 README）
+│   └── media/              ← 全部画作素材（见上方素材表）
 └── src/
     ├── main.tsx
     ├── App.tsx
@@ -311,6 +315,53 @@ ffmpeg -i input.mp4 -t 12 -an \
 - 滚动监听全部用 rAF 节流，进度条与聚光直接写 DOM 属性，不触发逐帧重渲染。
 - 项目卡的视觉带与首屏降级底仍是纯 CSS 生成；全站**只有首屏那一张背景图**是图片请求
   （WebP 优先 + JPEG 兜底 + `rel=preload`），且视频是可选增强。全站无第三方 JS。
+
+## 安全构建与回退（重要）
+
+### `npm run build` 不会毁掉上一版产物
+
+Vite 默认 `emptyOutDir: true`，会**在构建开始时就清空 `dist/`**。
+于是"构建中途失败"的后果不是"没更新"，而是**把一个原本可用的 `dist/` 变成空目录或半成品** ——
+既上不了线，也没有可回退的副本。
+
+所以 `npm run build` 走的是 `scripts/build.mjs`：
+
+```
+tsc -b                       失败 → 退出，dist 未动
+  → vite build --outDir .build-staging
+                             失败 → 删掉中间目录，dist 未动
+  → 自检 .build-staging/index.html 存在
+  → dist → dist-prev，.build-staging → dist
+                             换入失败 → 把 dist-prev 还原回 dist
+  → 成功后才删 dist-prev
+```
+
+**已实测证明**：故意植入一个类型错误后跑 `npm run build` → 退出码 1，
+而 `dist/index.html` 的 **hash 与 mtime 均未变化**，且没有残留中间目录。
+
+- 想绕过这层保护（直接构建进 dist）用 `npm run build:raw`
+- `.build-staging/` 与 `dist-prev/` 已加入 `.gitignore`
+
+### 代码回退走 git
+
+仓库已初始化（分支 `main`）。**`dist/` 刻意不入库**（它是产物），
+它的回退保障是上面的 `dist-prev` 机制，两者互补。
+
+| 想回退什么 | 命令 |
+| --- | --- |
+| 改坏了某个源文件 | `git checkout -- <文件>` |
+| 丢弃所有未提交改动 | `git reset --hard HEAD` |
+| 退回上一个提交 | `git revert <sha>`（留历史）／`git reset --hard HEAD~1`（不留） |
+| 确认当前是否偏离已提交状态 | `git status --short`（空 = 干净） |
+
+`.gitattributes` 已统一为 LF（`eol=lf`）：不设它时，Windows 上编辑过的文本文件
+在 Linux CI / 部署端会整文件显示为"已修改"，让 diff 失去可读性 ——
+而 diff 可读性正是判断"该不该回退"的前提。
+
+### 代码审查
+
+见 **[CODE-REVIEW.md](CODE-REVIEW.md)**：按 阻断 / 建议 / 吹毛求疵 分级，
+含每条问题的证据、处置与理由，以及明确标注的**未审范围**。
 
 ## 部署
 

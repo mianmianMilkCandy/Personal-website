@@ -120,6 +120,9 @@
   --grain-opacity: 0.26;
   --grain-blend: overlay;
 
+  /* 落影颜色。深色主题用近黑，浅色主题要收敛成暖棕，否则会脏 */
+  --shadow-soft: rgba(3, 8, 16, 0.42);
+
   /* ── 字体 ─────────────────────────────────────────────────────────── */
   --font-display: 'Inter Tight', 'Segoe UI Variable Display', 'Segoe UI',
     system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei UI',
@@ -263,4 +266,6 @@
 
   --grain-opacity: 0.13;
   --grain-blend: multiply;
+
+  --shadow-soft: rgba(58, 46, 26, 0.26);
 }
