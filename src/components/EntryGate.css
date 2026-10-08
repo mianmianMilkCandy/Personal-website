@@ -1,0 +1,121 @@
+/* ============================================================================
+   EntryGate · 入场幕屏
+   z-index 80：必须在颗粒层(60)与导航(50)之上，否则颗粒会糊在幕屏上。
+   ========================================================================== */
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--ink-1000);
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    visibility var(--dur-3) var(--ease-out);
+}
+
+.gate.is-leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 背景用的是 160px 的糊图，放大后天然柔焦 —— 0.7 KB 换来一屏氛围底 */
+.gate__bg {
+  position: absolute;
+  inset: -8%;
+  background-size: cover;
+  background-position: 58% 42%;
+  filter: blur(28px) saturate(1.2);
+  transform: scale(1.08);
+  animation: gateDrift 34s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes gateDrift {
+  from {
+    transform: scale(1.08) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.13) translate3d(-1.5%, -1.2%, 0);
+  }
+}
+
+.gate__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 45%, transparent 22%, var(--surface-deep) 100%),
+    linear-gradient(180deg, var(--surface-deep), transparent 45%, var(--surface-deep));
+  opacity: 0.86;
+}
+
+.gate__inner {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  text-align: center;
+  animation: gateIn var(--dur-3) var(--ease-out) both;
+}
+
+@keyframes gateIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.gate__label {
+  color: var(--fg-2);
+}
+
+.gate__sep {
+  margin-inline: 0.45rem;
+  color: var(--fg-4);
+}
+
+/* 双行胶囊：中文在上、英文小字在下 —— 与参考站一致 */
+.gate__btn {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 1.05rem 2.4rem;
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--r-full);
+  background: var(--glass-bg);
+  color: var(--fg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  transition:
+    transform var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    background var(--dur-2) var(--ease-out);
+}
+
+.gate__btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-line);
+  background: var(--hover-veil);
+}
+
+.gate__btn-cn {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.gate__btn-en {
+  color: var(--fg-3);
+  font-size: 0.6875rem;
+}
+
+.gate__hint {
+  color: var(--fg-4);
+}

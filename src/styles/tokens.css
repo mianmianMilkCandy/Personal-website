@@ -1,0 +1,266 @@
+/* ============================================================================
+   设计令牌 · Design Tokens
+   ----------------------------------------------------------------------------
+   方向：宫崎骏的黄昏绘本 × 工程师的仪表盘。
+   —— 画面（背景图）负责"童心"，控件（发丝线 / 等宽元数据 / 编号）负责"克制与可信"。
+
+   两套主题只差这一层：
+     dusk（默认）= 深靛蓝黄昏，暖金光强调色，画面亮部留给右侧
+     day         = 奶油纸白昼，天青蓝强调色，画面全亮
+   组件只允许消费语义令牌，不得出现字面色值 —— 否则切主题必错色。
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* ── 表面：深靛蓝。取自背景图的黄昏海面与阴影，而不是纯黑 ─────────── */
+  --ink-1000: #060b13;
+  --ink-900: #0a1220;
+  --ink-800: #0f1b2c;
+  --ink-700: #142539;
+  --ink-600: #1b3149;
+  --ink-500: #24405c;
+
+  /* 区块表面（半透明：让整页固定背景图透出来） */
+  --surface-alt: rgba(15, 27, 44, 0.82);
+  --surface-deep: rgba(6, 11, 19, 0.92);
+
+  /* ── 描边：发丝级。全站的"精密感"几乎全靠它 ───────────────────────── */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --line-3: rgba(255, 255, 255, 0.24);
+
+  /* ── 前景：暖奶油白，呼应画面里的石墙与阳光，不用冷白 ─────────────── */
+  --fg: #f4efe4;
+  --fg-2: #b9b4a6;
+  --fg-3: #83807a;
+  --fg-4: #4e5560;
+
+  /* ── 唯一强调色：黄昏金光。用量克制是"高级"的前提 ─────────────────── */
+  --accent: #f0b357;
+  --accent-hover: #f7c877;
+  --accent-deep: #c2862c;
+  --accent-glow: rgba(240, 179, 87, 0.16);
+  --accent-line: rgba(240, 179, 87, 0.38);
+  --accent-text: #f8cf8c;
+
+  /* ── 首屏合成：左侧渐深让文字落在暗面，右侧留出画面的亮部 ────────── */
+  --hero-scrim: linear-gradient(
+    100deg,
+    rgba(5, 10, 18, 0.94) 0%,
+    rgba(5, 10, 18, 0.74) 32%,
+    rgba(5, 10, 18, 0.26) 60%,
+    rgba(5, 10, 18, 0.44) 100%
+  );
+  --hero-veil: linear-gradient(
+    180deg,
+    rgba(4, 8, 15, 0.76) 0%,
+    rgba(4, 8, 15, 0.12) 24%,
+    rgba(4, 8, 15, 0) 60%,
+    rgba(4, 8, 15, 0.82) 100%
+  );
+  --hero-vignette: radial-gradient(
+    122% 88% at 62% 42%,
+    transparent 42%,
+    rgba(4, 8, 15, 0.7) 100%
+  );
+  /* 背景图自身调色：黄昏只轻微压暗，保住宫崎骏的云与亮部 */
+  --hero-img-filter: saturate(1.08) contrast(1.04) brightness(0.88);
+  --hero-grain-opacity: 0.26;
+
+  /* 玻璃层 */
+  --nav-glass: rgba(10, 18, 32, 0.72);
+  --foot-glass: rgba(4, 8, 15, 0.42);
+  --hover-veil: rgba(255, 255, 255, 0.045);
+
+  /* 玻璃层：参考站那种"悬浮卡片"质感 */
+  --glass-bg: rgba(12, 22, 34, 0.46);
+  --glass-bd: rgba(255, 255, 255, 0.14);
+  --glass-blur: 18px;
+
+  /* 胶囊按钮（参考站底部那颗白色动作按钮） */
+  --pill-bg: #f4efe4;
+  --pill-fg: #14212f;
+  --pill-bd: transparent;
+
+  /* 图标贴纸：给线条图标一个暖色底，才有"贴纸/漫画"感而不是裸线条 */
+  --tile-bg: rgba(240, 179, 87, 0.1);
+  --tile-bd: rgba(240, 179, 87, 0.24);
+
+  --heading-glow: 0 2px 30px rgba(3, 8, 16, 0.5);
+
+  /* 区块背景画作的可见度：低到只当"纸纹"，不与正文抢注意力 */
+  --sec-art-opacity: 0.2;
+
+  /* 区块接缝带：透明 → 半透明 → 不透明 → 半透明 → 透明。
+     中间那段不透明就是用来盖住两张背景图之间的硬接缝的。
+
+     颜色从 --ink-900 派生而不是写死 —— 自定义属性里的 var() 是在
+     使用它的元素上求值的，而 [data-theme='day'] 就作用在 <html> 上，
+     所以同一份声明会自动跟着主题走，不需要在 day 块里再抄一遍。
+     前两行是 color-mix 不可用时的兜底（后一行生效则覆盖前一行）。 */
+  --seam-edge: rgba(10, 18, 32, 0);
+  --seam-mid: rgba(10, 18, 32, 0.76);
+  --seam-core: var(--ink-900);
+  --seam-edge: color-mix(in srgb, var(--ink-900) 0%, transparent);
+  --seam-mid: color-mix(in srgb, var(--ink-900) 76%, transparent);
+
+  /* 整页固定背景图 */
+  --page-bg-opacity: 0.3;
+  --page-bg-blur: 56px;
+
+  /* 项目卡视觉带的基调兜底 */
+  --media-base-a: #0b1524;
+  --media-base-b: #070d16;
+  --media-stroke-1: rgba(255, 255, 255, 0.17);
+  --media-stroke-2: rgba(255, 255, 255, 0.34);
+  --grid-soft: rgba(255, 255, 255, 0.024);
+  --sheen: rgba(255, 255, 255, 0.05);
+
+  --grain-opacity: 0.26;
+  --grain-blend: overlay;
+
+  /* ── 字体 ─────────────────────────────────────────────────────────── */
+  --font-display: 'Inter Tight', 'Segoe UI Variable Display', 'Segoe UI',
+    system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei UI',
+    'Microsoft YaHei', sans-serif;
+  --font-sans: 'Inter Tight', 'Segoe UI Variable Text', 'Segoe UI', system-ui,
+    -apple-system, 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
+    sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'Cascadia Code',
+    Consolas, 'SF Mono', monospace;
+
+  /* ── 字号阶梯（PC 优先，clamp 保证 1024px 以下不崩） ───────────────── */
+  /* 首屏大标题：用户明确要求"更凸显标题 + 背景画风"，所以从 4.2vw 提到 6vw。
+     再往上加就会压掉画面，反而两头不讨好。 */
+  --fs-hero: clamp(2.9rem, 6vw, 7rem);
+  --fs-h1: clamp(2.4rem, 4.4vw, 4.25rem);
+  --fs-h2: clamp(1.6rem, 2.4vw, 2.5rem);
+  --fs-h3: 1.25rem;
+  --fs-lead: clamp(1.05rem, 1.25vw, 1.3rem);
+  --fs-body: 1rem;
+  --fs-sm: 0.875rem;
+  --fs-xs: 0.8125rem;
+  --fs-mono: 0.75rem;
+
+  /* ── 间距节奏 ─────────────────────────────────────────────────────── */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  /* ── 圆角：小。大圆角是"模板感"的重灾区 ──────────────────────────── */
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 8px;
+  --r-full: 999px;
+
+  /* ── 版心 ─────────────────────────────────────────────────────────── */
+  --shell: 1440px;
+  --gutter: clamp(1.5rem, 4vw, 4.5rem);
+  --nav-h: 72px;
+
+  /* ── 动效：统一 easeOutExpo 近似 ─────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 160ms;
+  --dur-2: 320ms;
+  --dur-3: 620ms;
+
+  /* ── 层级 ─────────────────────────────────────────────────────────── */
+  --z-grain: 60;
+  --z-nav: 50;
+}
+
+/* ============================================================================
+   白昼主题 · 奶油纸绘本
+   只有令牌变，组件一行都不用改。
+   ========================================================================== */
+[data-theme='day'] {
+  color-scheme: light;
+
+  --ink-1000: #f2e9d6;
+  --ink-900: #f8f1e2;
+  --ink-800: #f3ead8;
+  --ink-700: #fffdf7;
+  --ink-600: #ece1c9;
+  --ink-500: #dbcdaa;
+
+  --surface-alt: rgba(243, 234, 216, 0.8);
+  --surface-deep: rgba(248, 241, 226, 0.9);
+
+  --line: rgba(58, 46, 26, 0.14);
+  --line-2: rgba(58, 46, 26, 0.22);
+  --line-3: rgba(58, 46, 26, 0.34);
+
+  --fg: #2c2618;
+  --fg-2: #5a5140;
+  --fg-3: #857a63;
+  --fg-4: #a89b80;
+
+  --accent: #2f7fb8;
+  --accent-hover: #3d92cd;
+  --accent-deep: #1f5f8f;
+  --accent-glow: rgba(47, 127, 184, 0.16);
+  --accent-line: rgba(47, 127, 184, 0.34);
+  --accent-text: #1f5f8f;
+
+  --hero-scrim: linear-gradient(
+    100deg,
+    rgba(248, 241, 226, 0.95) 0%,
+    rgba(248, 241, 226, 0.8) 32%,
+    rgba(248, 241, 226, 0.18) 60%,
+    rgba(248, 241, 226, 0.36) 100%
+  );
+  --hero-veil: linear-gradient(
+    180deg,
+    rgba(248, 241, 226, 0.6) 0%,
+    rgba(248, 241, 226, 0.06) 24%,
+    rgba(248, 241, 226, 0) 60%,
+    rgba(248, 241, 226, 0.78) 100%
+  );
+  --hero-vignette: radial-gradient(
+    122% 88% at 62% 42%,
+    transparent 48%,
+    rgba(248, 241, 226, 0.6) 100%
+  );
+  --hero-img-filter: saturate(1.12) contrast(1.02) brightness(1.03);
+  --hero-grain-opacity: 0.14;
+
+  --nav-glass: rgba(248, 241, 226, 0.78);
+  --foot-glass: rgba(255, 253, 247, 0.55);
+  --hover-veil: rgba(58, 46, 26, 0.05);
+
+  --glass-bg: rgba(255, 253, 247, 0.56);
+  --glass-bd: rgba(58, 46, 26, 0.18);
+  --glass-blur: 18px;
+
+  --pill-bg: #2f2a22;
+  --pill-fg: #fdf8ec;
+  --pill-bd: transparent;
+
+  --tile-bg: rgba(47, 127, 184, 0.1);
+  --tile-bd: rgba(47, 127, 184, 0.24);
+
+  --heading-glow: 0 2px 24px rgba(255, 253, 247, 0.7);
+
+  --sec-art-opacity: 0.26;
+
+  --page-bg-opacity: 0.48;
+
+  --media-base-a: #fdf8ec;
+  --media-base-b: #f2e9d6;
+  --media-stroke-1: rgba(44, 38, 24, 0.22);
+  --media-stroke-2: rgba(44, 38, 24, 0.44);
+  --grid-soft: rgba(44, 38, 24, 0.03);
+  --sheen: rgba(255, 255, 255, 0.5);
+
+  --grain-opacity: 0.13;
+  --grain-blend: multiply;
+}

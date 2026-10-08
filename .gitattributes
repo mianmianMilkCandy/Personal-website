@@ -1,0 +1,13 @@
+# 统一换行符：仓库里一律 LF，工作区按平台。
+# 不设这一条时，Windows 上编辑过的文本文件会在 Linux CI / 部署端整文件显示为"已修改"，
+# 让 diff 完全失去可读性，也让 code review 和回滚判断都变难。
+* text=auto eol=lf
+
+# 二进制文件不做任何换行转换
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.ico  binary
+*.woff2 binary
+*.pdf  binary

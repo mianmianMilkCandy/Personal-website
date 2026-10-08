@@ -1,0 +1,44 @@
+/* ============================================================================
+   Seam · 区块接缝带
+   五段渐变：透明 → 半透明 → 不透明 → 半透明 → 透明
+   ========================================================================== */
+
+.seam {
+  position: relative;
+  z-index: 2;
+  height: var(--seam-h);
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    var(--seam-edge) 0%,
+    var(--seam-mid) 26%,
+    var(--seam-core) 50%,
+    var(--seam-mid) 74%,
+    var(--seam-edge) 100%
+  );
+}
+
+.seam--sm {
+  --seam-h: clamp(3rem, 6vh, 5rem);
+}
+
+.seam--md {
+  --seam-h: clamp(5rem, 11vh, 9rem);
+}
+
+.seam--lg {
+  --seam-h: clamp(7rem, 16vh, 13rem);
+}
+
+/* 首屏那张画最亮，接进正文需要更长的过渡距离 */
+.seam--lg {
+  background: linear-gradient(
+    180deg,
+    var(--seam-edge) 0%,
+    var(--seam-mid) 22%,
+    var(--seam-core) 48%,
+    var(--seam-core) 62%,
+    var(--seam-mid) 82%,
+    var(--seam-edge) 100%
+  );
+}

@@ -1,0 +1,342 @@
+/* ============================================================================
+   About · 关于 / 经历 / 能力
+   左窄右宽的编辑式分栏，左侧信息栏吸顶。
+   ========================================================================== */
+
+/* ── 图标概览：把能力矩阵先用四张"贴纸"翻译一遍 ─────────────────────── */
+.about__highlights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-8);
+}
+
+.about__highlight {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+  padding-right: var(--sp-4);
+}
+
+.about__highlight-label {
+  margin-top: 0.15rem;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.about__highlight-note {
+  color: var(--fg-3);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+.about__top {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: var(--sp-9);
+  align-items: start;
+}
+
+.about__aside {
+  position: sticky;
+  top: calc(var(--nav-h) + var(--sp-5));
+  display: grid;
+  gap: var(--sp-6);
+}
+
+/* ── 头像 ─────────────────────────────────────────────────────────────── */
+.portrait {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.portrait__frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: linear-gradient(150deg, var(--ink-700), var(--ink-800));
+}
+
+.portrait__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 轻微去饱和：和站点冷调统一，也避免生活照色彩跳脱 */
+  filter: grayscale(0.32) contrast(1.05) brightness(0.94);
+}
+
+.portrait__fallback {
+  font-size: 2.75rem;
+  letter-spacing: 0.14em;
+  color: var(--fg-4);
+}
+
+/* 四角准星：给照片一个"被标定过"的技术感 */
+.portrait__corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--accent-line);
+}
+.portrait__corner--tl {
+  top: 8px;
+  left: 8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.portrait__corner--tr {
+  top: 8px;
+  right: 8px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.portrait__corner--bl {
+  bottom: 8px;
+  left: 8px;
+  border-right: 0;
+  border-top: 0;
+}
+.portrait__corner--br {
+  bottom: 8px;
+  right: 8px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.portrait__cap {
+  color: var(--fg-3);
+}
+
+/* ── 联系方式 ─────────────────────────────────────────────────────────── */
+.contact {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.contact__row {
+  display: grid;
+  grid-template-columns: auto 3.4rem minmax(0, 1fr) auto;
+  gap: var(--sp-3);
+  align-items: center;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* 联系方式那一列的小贴纸不跟随 hover 歪头，避免整列在鼠标扫过时乱动 */
+.contact__icon:hover {
+  transform: none;
+  border-color: var(--tile-bd);
+}
+
+.contact__label {
+  color: var(--fg-3);
+}
+
+.contact__value {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+a.contact__value:hover {
+  color: var(--accent-text);
+}
+
+.contact__copy {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.contact__copy:hover {
+  color: var(--fg);
+  border-color: var(--line-3);
+}
+
+.contact__copy.is-done {
+  color: var(--accent-text);
+  border-color: var(--accent-line);
+}
+
+.about__resume {
+  justify-self: start;
+}
+
+/* ── 自述 ─────────────────────────────────────────────────────────────── */
+.about__bio {
+  display: grid;
+  gap: var(--sp-4);
+  max-width: 64ch;
+}
+
+.about__bio p {
+  color: var(--fg-2);
+}
+
+/* 首段提亮放大：读者只会认真读第一段，把重点压在这里 */
+.about__bio p:first-child {
+  font-size: var(--fs-lead);
+  line-height: 1.68;
+  color: var(--fg);
+}
+
+/* ── 下半区：经历 + 能力 ──────────────────────────────────────────────── */
+.about__bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--sp-9);
+  margin-top: var(--sp-9);
+  padding-top: var(--sp-8);
+  border-top: 1px solid var(--line);
+}
+
+.block__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: var(--sp-5);
+  color: var(--fg-3);
+}
+
+.block__title .icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent);
+}
+
+.timeline {
+  display: grid;
+}
+
+.timeline__item {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: var(--sp-5);
+  padding-block: var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.timeline__item:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.timeline__period {
+  padding-top: 0.2rem;
+  color: var(--fg-3);
+}
+
+.timeline__org {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.timeline__role {
+  margin-top: 0.35rem;
+  color: var(--accent-text);
+}
+
+.timeline__detail {
+  max-width: 58ch;
+  margin-top: 0.6rem;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+
+.caps {
+  display: grid;
+}
+
+.caps__row {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+  padding-block: var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.caps__row:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.caps__row dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-top: 0.3rem;
+  color: var(--fg-3);
+}
+
+.caps__row dt .icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--accent);
+}
+
+.caps__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.caps__items li {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  font-size: var(--fs-xs);
+  color: var(--fg-2);
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+
+.caps__items li:hover {
+  border-color: var(--line-3);
+  color: var(--fg);
+}
+
+@media (max-width: 1160px) {
+  .about__highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-6);
+  }
+  .about__top {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-7);
+  }
+  .about__aside {
+    position: static;
+  }
+  .portrait {
+    max-width: 300px;
+  }
+  .about__bottom {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-8);
+  }
+}
+
+@media (max-width: 720px) {
+  .timeline__item,
+  .caps__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-2);
+  }
+}

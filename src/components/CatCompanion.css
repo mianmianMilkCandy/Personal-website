@@ -1,0 +1,84 @@
+/* ============================================================================
+   CatCompanion · 跟随光标的猫
+   z-index 45：内容之上，但让开导航(50)、颗粒层(60)与入场幕屏(80)。
+   ========================================================================== */
+
+.cat {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 45;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+  will-change: transform;
+  /* 首帧还没被 rAF 定位前先藏起来，避免在左上角闪一下 */
+  opacity: 0;
+  animation: catAppear var(--dur-3) var(--ease-out) 1.2s forwards;
+}
+
+@keyframes catAppear {
+  to {
+    opacity: 1;
+  }
+}
+
+.cat__body {
+  width: 100%;
+  height: 100%;
+  /* 压扁要绕着"脚底"发生，否则整只猫会原地缩放而不是落地 */
+  transform-origin: 50% 92%;
+  will-change: transform;
+}
+
+.cat__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 一点点落影把它和背景拉开，不然贴在画上会糊 */
+  filter: drop-shadow(0 8px 12px rgba(3, 8, 16, 0.42));
+}
+
+/* 尾巴自己摆。transform-box 必须设 fill-box，
+   否则 SVG 里的 transform-origin 是按整个 viewBox 算的，尾巴会甩飞。 */
+.cat__tail {
+  transform-box: fill-box;
+  transform-origin: 92% 20%;
+  animation: catTail 2.6s var(--ease-in-out) infinite;
+}
+
+@keyframes catTail {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(9deg);
+  }
+}
+
+/* 眨眼：绝大多数时间睁着，偶尔快速闭一下 */
+.cat__eyes {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: catBlink 6.4s linear infinite;
+}
+
+@keyframes catBlink {
+  0%,
+  91%,
+  100% {
+    transform: scaleY(1);
+  }
+  94%,
+  96% {
+    transform: scaleY(0.08);
+  }
+}
+
+/* 系统要求减少动效时不渲染（组件层已挡，这里再兜一层） */
+@media (prefers-reduced-motion: reduce) {
+  .cat {
+    display: none;
+  }
+}

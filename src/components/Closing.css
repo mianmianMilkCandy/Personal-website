@@ -1,0 +1,202 @@
+/* ============================================================================
+   Closing · 整屏收尾页
+   把"联系方式"从一个区块升级成一屏：留白拉满，只留一个动作（发邮件）。
+   ========================================================================== */
+
+.closing {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--surface-deep);
+}
+
+/* 底部冷色辉光：把视线压向页面中心偏下，收尾页不至于空得发慌。
+   z-index 0（不是 -1）：区块画作也在 0 层，靠 DOM 顺序让辉光压在画之上。 */
+.closing__glow {
+  position: absolute;
+  inset: auto 0 -25% 0;
+  z-index: 0;
+  height: 75%;
+  background: radial-gradient(
+    58% 100% at 50% 100%,
+    var(--accent-glow),
+    transparent 70%
+  );
+}
+
+.closing__inner {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding: var(--sp-9) var(--gutter);
+}
+
+.closing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: var(--sp-5);
+  color: var(--accent-text);
+}
+
+.closing__eyebrow .icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.closing__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 5.6vw, 5.5rem);
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: -0.045em;
+}
+
+.closing__title-line {
+  display: block;
+}
+
+.closing__title-line--ghost {
+  color: var(--fg-3);
+  font-weight: 300;
+}
+
+@supports (-webkit-text-stroke: 1px #000) {
+  .closing__title-line--ghost {
+    color: transparent;
+    -webkit-text-stroke: 1.2px var(--line-3);
+    font-weight: 400;
+  }
+}
+
+.closing__lead {
+  max-width: 48ch;
+  margin-top: var(--sp-6);
+}
+
+.closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-5);
+  margin-top: var(--sp-6);
+}
+
+/* 邮箱本身就是这屏最大的按钮：字号拉到标题级，下划线做状态反馈 */
+.closing__mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  padding-bottom: 0.35rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.4vw, 2.1rem);
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.closing__mail-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--accent);
+}
+
+.closing__mail::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 1px;
+  background: var(--line-3);
+  transition: background var(--dur-1) var(--ease-out);
+}
+
+.closing__mail:hover {
+  color: var(--accent-text);
+}
+
+.closing__mail:hover::after {
+  background: var(--accent);
+}
+
+.closing__socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-5);
+  margin-top: var(--sp-7);
+}
+
+.closing__socials a,
+.closing__socials button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.closing__socials a:hover,
+.closing__socials button:hover {
+  color: var(--fg);
+}
+
+.closing__social-arrow {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--fg-4);
+  transition:
+    transform var(--dur-2) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+
+.closing__socials a:hover .closing__social-arrow {
+  transform: translateX(3px);
+  color: var(--accent);
+}
+
+.closing__social-state {
+  color: var(--fg-4);
+}
+
+.closing__foot {
+  border-top: 1px solid var(--line);
+  background: var(--foot-glass);
+}
+
+.closing__foot-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: var(--shell);
+  min-height: 64px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.closing__foot-inner .mono {
+  color: var(--fg-4);
+}
+
+.closing__top {
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.closing__top:hover {
+  color: var(--accent-text);
+}

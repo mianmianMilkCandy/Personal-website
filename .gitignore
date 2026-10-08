@@ -1,0 +1,30 @@
+# 依赖与产物
+node_modules/
+dist/
+# 安全构建的中间目录与上一版备份（见 scripts/build.mjs）
+.build-staging/
+dist-prev/
+*.local
+
+# 构建缓存
+.vite/
+node_modules/.tmp/
+
+# 编辑器 / 系统
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# 仓库分析临时区（仅本地，不入库）
+_repo/
+
+# 工作区内 npm 缓存（沙箱下全局缓存不可写，故就近缓存）
+.npm-cache/
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

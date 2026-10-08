@@ -1,0 +1,305 @@
+/* ============================================================================
+   Projects · 精选项目（大卡片）
+   每张卡片 = 抬头行 + 全宽视觉带 + 双栏正文。
+   视觉带完全由 CSS 生成（色调光晕 + 网格 + 描边大字），因此没有图片依赖，
+   既不会破版也不增加请求。
+   ========================================================================== */
+
+.projects__list {
+  display: grid;
+  gap: var(--sp-8);
+}
+
+.project {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--ink-700);
+  transition: border-color var(--dur-2) var(--ease-out);
+}
+
+.project:hover {
+  border-color: var(--line-2);
+}
+
+.project__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-6);
+  border-bottom: 1px solid var(--line);
+}
+
+.project__index {
+  color: var(--accent-text);
+}
+
+.project__period {
+  color: var(--fg-3);
+}
+
+/* ── 视觉带 ───────────────────────────────────────────────────────────── */
+.project__visual {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 230px;
+  padding: var(--sp-6);
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  /* 兜底：不支持 color-mix 时退化成强调色微光，不会变成空白也不会串色 */
+  background:
+    radial-gradient(70% 90% at 18% 18%, var(--accent-glow), transparent 62%),
+    radial-gradient(65% 85% at 82% 82%, var(--accent-glow), transparent 60%),
+    linear-gradient(150deg, var(--media-base-a), var(--media-base-b));
+}
+
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  .project__visual {
+    background:
+      radial-gradient(
+        70% 90% at 18% 18%,
+        color-mix(in srgb, var(--tone-a) 22%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        65% 85% at 82% 82%,
+        color-mix(in srgb, var(--tone-b) 18%, transparent),
+        transparent 60%
+      ),
+      linear-gradient(150deg, var(--media-base-a), var(--media-base-b));
+  }
+}
+
+/* 画作裁切件：每张卡的真实质感来源。DOM 里排在第一位，
+   后面的 veil / grid / 大字按顺序叠在它上面（都不带 z-index）。 */
+.project__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.62;
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+}
+
+.project:hover .project__art {
+  opacity: 0.8;
+  transform: scale(1.03);
+}
+
+/* 色调薄膜：把画压进当前主题，并保证描边大字与徽标读得清 */
+.project__visual-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 90% at 18% 18%, var(--accent-glow), transparent 62%),
+    linear-gradient(180deg, transparent 30%, var(--media-base-b) 100%);
+}
+
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  .project__visual-veil {
+    background:
+      radial-gradient(
+        70% 90% at 18% 18%,
+        color-mix(in srgb, var(--tone-a) 30%, transparent),
+        transparent 62%
+      ),
+      radial-gradient(
+        65% 85% at 82% 82%,
+        color-mix(in srgb, var(--tone-b) 24%, transparent),
+        transparent 60%
+      ),
+      linear-gradient(180deg, transparent 30%, var(--media-base-b) 100%);
+  }
+}
+
+.project__visual-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image:
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 72px),
+    repeating-linear-gradient(0deg, var(--grid-soft) 0 1px, transparent 1px 72px);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+}
+
+/* 描边大字：卡片的名字以"线稿"形式出现，比实心大标题更克制 */
+.project__visual-name {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 5.4vw, 4.75rem);
+  font-weight: 600;
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  transition:
+    color var(--dur-2) var(--ease-out),
+    letter-spacing var(--dur-3) var(--ease-out);
+}
+
+@supports (-webkit-text-stroke: 1px #000) {
+  .project__visual-name {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--media-stroke-1);
+    transition:
+      -webkit-text-stroke-color var(--dur-2) var(--ease-out),
+      letter-spacing var(--dur-3) var(--ease-out);
+  }
+  .project:hover .project__visual-name {
+    -webkit-text-stroke-color: var(--media-stroke-2);
+    letter-spacing: -0.03em;
+  }
+}
+
+/* 掠过式高光：hover 时一道极淡的光扫过，替代廉价的缩放特效 */
+.project__visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    var(--sheen) 50%,
+    transparent 65%
+  );
+  transform: translateX(-45%);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+}
+
+.project:hover .project__visual::after {
+  opacity: 1;
+  transform: translateX(45%);
+}
+
+.project__badge {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  padding: 0.3rem 0.55rem;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-1);
+  color: var(--fg-3);
+}
+
+/* ── 正文双栏 ─────────────────────────────────────────────────────────── */
+.project__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+  gap: var(--sp-8);
+  padding: var(--sp-7) var(--sp-6);
+}
+
+.project__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.project__name-en {
+  margin-top: 0.5rem;
+  color: var(--fg-3);
+}
+
+.project__summary {
+  max-width: 46ch;
+  margin-top: var(--sp-4);
+}
+
+.project__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-6);
+}
+
+.project__detail {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.project__detail li {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: var(--fs-sm);
+  line-height: 1.62;
+  color: var(--fg-2);
+}
+
+/* 短横线项目符号：比圆点更"文档化" */
+.project__detail li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.66em;
+  width: 6px;
+  height: 1px;
+  background: var(--accent-line);
+}
+
+.project__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-7);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+
+.project__metric dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  color: var(--fg-3);
+}
+
+.project__metric dt .icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--accent);
+}
+
+.project__metric dd {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  letter-spacing: -0.01em;
+}
+
+.project__stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+.project__stack li {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+
+@media (max-width: 1000px) {
+  .project__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-6);
+  }
+  .project__visual {
+    min-height: 180px;
+  }
+}

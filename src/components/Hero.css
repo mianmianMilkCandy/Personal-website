@@ -1,0 +1,351 @@
+/* ============================================================================
+   Hero · 整屏首屏（版式对齐参考站）
+   ----------------------------------------------------------------------------
+   左下 = 大标题 + 胶囊动作行 + SCENE 小字
+   右下 = 玻璃 PROFILE 卡
+   左上 / 右上 = 固定导航（点字标 + 玻璃控件簇）
+
+   图层自下而上：
+     ① 画作（横/竖两版，按视口切换）
+     ② 可选视频（放了 media/hero-loop.mp4 才出现，能播后淡入）
+     ③ CSS 兜底底
+     ④ 左侧渐深的 scrim —— 让文字落在暗面
+     ⑤ veil / 暗角 / 网格 / 鼠标聚光
+
+   这张画（台阶上的猫）左边三分之一是石阶（实测亮度 88.7），右边是亮云海
+   （170.6），所以文字压左侧几乎不需要额外加暗 —— scrim 只做兜底。
+   ========================================================================== */
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: var(--nav-h);
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--ink-1000);
+}
+
+/* ── 媒体层 ───────────────────────────────────────────────────────────── */
+.hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.hero__media picture {
+  display: contents;
+}
+
+.hero__image,
+.hero__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 猫在中偏左、巨云在右，取中略偏上即可两者都保住 */
+  object-position: 50% 45%;
+  transform: translate3d(0, var(--parallax, 0%), 0) scale(1.05);
+  will-change: transform;
+}
+
+/* 竖版取景已经把猫放到正中，所以这里只需要往下压一点留住台阶 */
+@media (max-width: 900px), (max-aspect-ratio: 1/1) {
+  .hero__image,
+  .hero__video {
+    object-position: 50% 38%;
+  }
+}
+
+.hero__image {
+  filter: var(--hero-img-filter);
+}
+
+.hero__video {
+  opacity: 0;
+  filter: saturate(1.05) contrast(1.06) brightness(0.86);
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+
+.hero__video.is-ready {
+  opacity: 1;
+}
+
+.hero__fallback {
+  position: absolute;
+  inset: -10%;
+  background:
+    radial-gradient(58% 52% at 22% 28%, var(--accent-glow), transparent 62%),
+    radial-gradient(54% 48% at 78% 70%, rgba(59, 130, 246, 0.14), transparent 60%),
+    linear-gradient(160deg, var(--media-base-a), var(--media-base-b));
+  animation: heroDrift 26s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes heroDrift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-2.5%, -1.8%, 0) scale(1.06);
+  }
+}
+
+/* ── 合成层 ───────────────────────────────────────────────────────────── */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--hero-scrim);
+}
+
+.hero__veil {
+  position: absolute;
+  inset: 0;
+  background: var(--hero-veil);
+}
+
+.hero__vignette {
+  position: absolute;
+  inset: 0;
+  background: var(--hero-vignette);
+}
+
+.hero__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.4;
+  background-image:
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(0deg, var(--grid-soft) 0 1px, transparent 1px 96px);
+  -webkit-mask-image: radial-gradient(100% 72% at 42% 45%, #000 14%, transparent 76%);
+  mask-image: radial-gradient(100% 72% at 42% 45%, #000 14%, transparent 76%);
+}
+
+.hero__spotlight {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 50%),
+    var(--accent-glow),
+    transparent 68%
+  );
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+
+.hero:hover .hero__spotlight {
+  opacity: 1;
+}
+
+/* ── 版式：左右两栏、底部对齐 ─────────────────────────────────────────── */
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  align-content: end;
+  align-items: end;
+  gap: var(--sp-8);
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding: var(--sp-9) var(--gutter) var(--sp-6);
+}
+
+.hero__lead {
+  max-width: 46rem;
+}
+
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: var(--sp-5);
+  color: var(--fg-2);
+}
+
+.hero__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--fg-4);
+  flex: none;
+}
+
+.hero__dot[data-tone='accent'] {
+  background: var(--accent);
+  animation: dotPulse 3.4s var(--ease-in-out) infinite;
+}
+
+@keyframes dotPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+}
+
+.hero__slash {
+  color: var(--fg-4);
+}
+
+.hero__title {
+  margin-bottom: var(--sp-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-hero);
+  font-weight: 450;
+  line-height: 1.08;
+  letter-spacing: -0.028em;
+  text-shadow: var(--heading-glow);
+  text-wrap: balance;
+}
+
+.hero__title-line {
+  display: block;
+}
+
+/* 句号用强调色：整站唯一的彩色标点 */
+.hero__title-dot {
+  color: var(--accent);
+}
+
+.hero__tagline {
+  max-width: 42ch;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+}
+
+.hero__scrollhint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--fg-3);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.hero__scrollhint::after {
+  content: '';
+  display: block;
+  width: 26px;
+  height: 1px;
+  background: var(--line-2);
+  transition: background var(--dur-1) var(--ease-out);
+}
+
+.hero__scrollhint:hover {
+  color: var(--fg);
+}
+
+.hero__scrollhint:hover::after {
+  background: var(--accent);
+}
+
+/* SCENE 小字：参考站左下角那行，这里让它承载真实信息（主题 + 时间） */
+.hero__scene {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: var(--sp-6);
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero__scene-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--accent);
+}
+
+/* ── 右下玻璃 PROFILE 卡 ─────────────────────────────────────────────── */
+.hero__card {
+  display: grid;
+  gap: 0.35rem;
+  justify-self: end;
+  width: 100%;
+  padding: var(--sp-6);
+}
+
+.hero__card-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-text);
+}
+
+.hero__card-label-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.hero__card-name {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 550;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.hero__card-role {
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+}
+
+.hero__card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--glass-bd);
+}
+
+.hero__card-item dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.3rem;
+  color: var(--fg-3);
+}
+
+.hero__card-item dt .icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.hero__card-item dd {
+  font-size: var(--fs-sm);
+  color: var(--fg);
+}
+
+.hero__card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--glass-bd);
+  color: var(--fg-2);
+}
+
+@media (max-width: 1100px) {
+  .hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-6);
+  }
+  .hero__card {
+    justify-self: start;
+    max-width: 380px;
+  }
+}

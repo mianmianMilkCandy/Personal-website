@@ -1,0 +1,257 @@
+/* ============================================================================
+   Nav · 顶部条（对齐参考站：左侧"点 + 字标"，右侧玻璃控件簇）
+   ========================================================================== */
+
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: var(--z-nav);
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+  transition:
+    background var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    backdrop-filter var(--dur-2) var(--ease-out);
+}
+
+/* 只在离开首屏后给导航底色：压在画面上时保持通透，画面才不被切一刀 */
+.nav.is-stuck {
+  background: var(--nav-glass);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border-bottom-color: var(--line);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ── 字标：一个强调色小点 + 等宽大写，参考站的极简做法 ───────────────── */
+.nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.nav__brand-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.nav__brand-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.nav__brand-sep{
+  color: var(--fg-4);
+}
+
+.nav__brand-role {
+  color: var(--fg-3);
+}
+
+/* ── 链接 ─────────────────────────────────────────────────────────────── */
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+}
+
+.nav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+  padding-block: 0.5rem;
+  font-size: var(--fs-sm);
+  color: var(--fg-2);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.nav__link-index {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--fg-4);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+/* 下划线用 scaleX 而不是 width：走合成层，不触发布局 */
+.nav__link::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0.1875rem 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.nav__link:hover {
+  color: var(--fg);
+}
+
+.nav__link:hover::after {
+  transform: scaleX(1);
+  opacity: 0.45;
+}
+
+.nav__link.is-active {
+  color: var(--fg);
+}
+
+.nav__link.is-active::after {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+.nav__link.is-active .nav__link-index {
+  color: var(--accent-text);
+}
+
+/* ── 右侧：玻璃控件簇 + 胶囊 CTA ──────────────────────────────────────── */
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.nav__cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--r-full);
+  color: var(--fg-2);
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.nav__cluster:hover {
+  color: var(--fg);
+  border-color: var(--accent-line);
+}
+
+.nav__cluster-icon {
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+
+.nav__cluster-icon .icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.nav__cluster-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.nav__cluster-sep {
+  color: var(--fg-4);
+}
+
+/* 两格小指示器：当前场景亮起 —— 替代参考站那条进度滑块 */
+.nav__cluster-dots {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 0.15rem;
+}
+
+.nav__cluster-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: var(--r-full);
+  background: var(--line-3);
+  transition: background var(--dur-2) var(--ease-out);
+}
+
+.nav__cluster-dots i.is-on {
+  background: var(--accent);
+}
+
+/* 跟随小猫的开关：默认开启时描边点亮，关闭时退回灰 */
+.nav__cat {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+  color: var(--fg-4);
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+
+.nav__cat .icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.nav__cat:hover {
+  color: var(--fg-2);
+  border-color: var(--line-3);
+}
+
+.nav__cat.is-on {
+  color: var(--accent-text);
+  border-color: var(--accent-line);
+}
+
+.nav__cta {
+  padding: 0.7rem 1.15rem;
+}
+
+/* ── 阅读进度：压在导航下边框上的一根强调色细线 ───────────────────────── */
+.nav__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0.85;
+}
+
+@media (max-width: 1000px) {
+  /* PC 优先：窄屏先收掉中部链接，保留字标、场景簇与 CTA */
+  .nav__links {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .nav__brand-role,
+  .nav__cluster-sep,
+  .nav__cluster-label {
+    display: none;
+  }
+  .nav__cta {
+    padding: 0.65rem 0.9rem;
+  }
+}

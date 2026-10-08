@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dusk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a1220" />
+
+    <!-- 主题必须在样式生效前定下来，否则首屏会先闪一下另一个主题。
+         这一段是内联同步脚本，不能改成模块（模块是延迟执行的）。 -->
+    <script>
+      try {
+        var t = localStorage.getItem('site-theme')
+        document.documentElement.dataset.theme =
+          t === 'day' || t === 'dusk' ? t : 'dusk'
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dusk'
+      }
+    </script>
+
+    <title>全栈开发工程师 · 个人主页</title>
+    <meta
+      name="description"
+      content="全栈开发工程师个人主页 —— 工程实践、精选项目与技术栈。"
+    />
+
+    <!-- 字体：Inter Tight（拉丁显示体）+ JetBrains Mono（等宽元数据）。
+         离线或网络受限时自动回落到系统字体栈，不影响可读性与排版节奏。 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
+    />
+
+    <!-- 首屏画作预加载。两条 preload 的 media 必须与 Hero.tsx 里 <picture> 的
+         <source media> 完全一致 —— 否则会给用竖版的视口白拉一张横版大图。 -->
+    <link
+      rel="preload"
+      as="image"
+      href="/media/hero-cat.webp"
+      type="image/webp"
+      fetchpriority="high"
+      media="(min-width: 901px) and (min-aspect-ratio: 1/1)"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/media/hero-cat-portrait.webp"
+      type="image/webp"
+      fetchpriority="high"
+      media="(max-width: 900px), (max-aspect-ratio: 1/1)"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      本站需要启用 JavaScript 才能正常浏览。本站为纯静态站点，不会收集任何数据。
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
