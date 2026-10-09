@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { profile } from '../data/profile'
 import { asset } from '../lib/asset'
@@ -31,6 +31,8 @@ function shouldShowGate(): boolean {
 export default function EntryGate() {
   const [visible, setVisible] = useState(shouldShowGate)
   const [leaving, setLeaving] = useState(false)
+  /** 这一趟到底有没有出现过幕屏 —— 决定要不要广播"门开了"（见下面那个 effect） */
+  const wasShownRef = useRef(visible)
 
   const enter = useCallback(() => {
     setLeaving((already) => {
@@ -50,6 +52,17 @@ export default function EntryGate() {
     const id = window.setTimeout(() => setVisible(false), 620)
     return () => window.clearTimeout(id)
   }, [leaving])
+
+  /* 门真正卸载之后广播一次 —— 立方体在幕屏期间会把首屏的入场压住
+     （见 lib/cube.ts 的 gateHold），收到这个事件才放行，于是那 620ms 的
+     入场动画发生在门开之后，而不是门后面。
+     用 ref 记住"这一趟开过门"：没开过门（回头客 / 减少动效）就不广播，
+     免得平白多播一次；StrictMode 的双跑也不会误触发（那时 visible 还是 true）。 */
+  useEffect(() => {
+    if (visible || !wasShownRef.current) return
+    wasShownRef.current = false
+    window.dispatchEvent(new Event('site:entered'))
+  }, [visible])
 
   // 幕屏期间：锁滚动 + 把背景设为 inert。
   // 只锁 body 滚动是不够的 —— 幕屏声明了 role="dialog" aria-modal="true"，

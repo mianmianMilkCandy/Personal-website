@@ -17,12 +17,30 @@
    角度曲线：默认每步两端各留 15% 驻留（EASE_DWELL），90° 的转动压进中间
    70%。把 EASE_DWELL 改成 0 就是纯线性 —— 滚动 = 匀速旋转，任何时刻都在
    斜面上（观感最"立方体"，但几乎没有可读窗口）。
-   ========================================================================== */
 
-import { revealCubeFace } from './revealObserver'
+   除了摆位，驱动还负责**面内内容的相位**（进 / 出场）：每帧把
+   data-state="in" / "out" 写到每个 .cube__slot 上，CSS 侧见 Cube.css 那一节。
+   相位写在槽位而不是逐个元素上，是因为「这一面转走了」只有这里知道；而且
+   每转进来一次就重播一次入场，天然满足「动画不止一次」。
+   ========================================================================== */
 
 /** 每步两端的驻留比例；0 = 纯线性。 */
 const EASE_DWELL = 0.15
+
+/* ----------------------------------------------------------------------------
+   面内内容的进出场阈值（e ∈ [0,1] 是这一面的角度进度，0 = 正对镜头，1 = 转出 90°）
+   ----------------------------------------------------------------------------
+   出场 CONTENT_EXIT_AT：面刚开始转（约 22°）就让正文退场 —— 拖到面已经歪掉
+   再退，那 320ms 的退场会被压在斜面里，看起来只是「变糊了」。
+   进场 CONTENT_ENTER_AT：面快转正（约 22°）时才把正文放回来 —— 入场那 620ms
+   正好落在「面落定」这段，是最看得清的一段时间。
+
+   代价：e 落在两个阈值之间时，两个面上的正文都不在（只剩画面与版面）。
+   停在半步中间就是「两个空面」—— 这是刻意的：旋转中段本来就是几何过渡帧，
+   歪着的正文既读不了也难看。想让正文一直留着，把两个阈值都往 0.5 推。
+   -------------------------------------------------------------------------- */
+const CONTENT_EXIT_AT = 0.25
+const CONTENT_ENTER_AT = 0.75
 
 /** 假光照上限的兜底值（正本是 tokens.css 的 --cube-shade-max）。 */
 const SHADE_FALLBACK = 0.22
@@ -50,7 +68,13 @@ export function initCube({ stage, slots }: CubeOptions): () => void {
   let shadeMax = readShadeMax()
   let persp = readPerspective()
   let reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const revealed = new Set<number>()
+  /* 首帧只落位、不写相位。入场过渡要有一个"变化前样式"才会播：在同一帧里
+     既插进 DOM 又加上状态，浏览器只会算一次样式，元素直接以最终状态出现，
+     首屏那 620ms 的入场就没了。所以相位推迟到第二帧。 */
+  let primed = false
+  /* 幕屏（EntryGate）还挡着就先别揭示首屏 —— 否则整段入场动画都在门后面放完了，
+     用户一进来看到的是一个已经静止的首屏。门卸载时广播 site:entered，见 EntryGate.tsx。 */
+  let gateHold = !!document.querySelector('.gate')
 
   function readShadeMax(): number {
     const raw = getComputedStyle(stage).getPropertyValue('--cube-shade-max').trim()
@@ -101,10 +125,8 @@ export function initCube({ stage, slots }: CubeOptions): () => void {
     // 这是凸棱在正面受光下的必然结果，也是"体积感"的来源。
     const shade = shadeMax * (1 - Math.cos((Math.abs(t) * Math.PI) / 2))
     slot.style.setProperty('--shade', shade.toFixed(4))
-    if (!revealed.has(i)) {
-      revealed.add(i)
-      revealCubeFace(slot)
-    }
+    // 注意：这里**不再**揭示面内元素。进出场统一由 update() 末尾的相位循环
+    // 负责，因为要求是"可重复"—— 每转进来一次就要重播一次。
   }
 
   function park(i: number): void {
@@ -128,6 +150,30 @@ export function initCube({ stage, slots }: CubeOptions): () => void {
     for (let i = 0; i < n; i++) {
       if (i !== k && i !== k + 1) park(i)
     }
+
+    if (!primed) {
+      primed = true
+      schedule()
+      return
+    }
+
+    /* ── 相位：只有"正对镜头"和"即将正对镜头"这两个面算在场 ──────────────
+       其余（包括刚被 park 掉的、以及还在下方等着转进来的）一律 out —— 它们
+       本来就停在起始位姿上，写 out 只是把"退场要更快、不排队"这条时序挂上去，
+       于是下一次写 in 时入场动画是完整的（时序取自"变化之后"那一份样式）。 */
+    for (let i = 0; i < n; i++) {
+      const live =
+        !gateHold &&
+        (i === k ? e <= CONTENT_EXIT_AT : i === k + 1 ? e >= CONTENT_ENTER_AT : false)
+      const next = live ? 'in' : 'out'
+      if (slots[i].dataset.state !== next) slots[i].dataset.state = next
+    }
+  }
+
+  /** 幕屏淡出、真正卸载之后才揭示首屏（见上面的 gateHold 说明）。 */
+  function onGateOpen(): void {
+    gateHold = false
+    schedule()
   }
 
   function schedule(): void {
@@ -150,12 +196,14 @@ export function initCube({ stage, slots }: CubeOptions): () => void {
   // 首帧必须在绘制前落位：否则九个面会先同时可见、闪一下
   update()
 
+  if (gateHold) window.addEventListener('site:entered', onGateOpen, { once: true })
   window.addEventListener('scroll', schedule, { passive: true })
   window.addEventListener('resize', onResize)
   motionQuery.addEventListener('change', onMotionChange)
 
   return () => {
     if (frame) cancelAnimationFrame(frame)
+    window.removeEventListener('site:entered', onGateOpen)
     window.removeEventListener('scroll', schedule)
     window.removeEventListener('resize', onResize)
     motionQuery.removeEventListener('change', onMotionChange)

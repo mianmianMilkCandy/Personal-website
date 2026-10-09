@@ -65,6 +65,32 @@
   opacity: var(--shade, 0);
 }
 
+/* ── 面内内容的相位（进 / 出场）────────────────────────────────────────────
+   驱动（lib/cube.ts）每帧把 data-state 写在每个 .cube__slot 上：
+
+     data-state="in"   这一面正对镜头  → 内容就位
+     data-state="out"  正在转走 / 还没转进来 → 内容退回起始位姿，且更快退场
+
+   为什么相位挂在**槽位**而不是逐个元素上：元素级的 IntersectionObserver 在
+   fixed 舞台上会把九个面同时判成"在视口里"，而且它看不见"这一面转走了"。
+   挂在槽位上，一次写属性就让整面的内容（包括没有包 Reveal 的那些，见
+   Hero.css / Closing.css / Projects.css 各自的进出场段）一起响应。
+
+   时序契约（很重要）：
+     · 入场 = .reveal 自己的 `--dur-3` + `--reveal-delay`（阶梯延迟）；
+     · 出场 = 这里给的 `--dur-2` + 0ms（同时退场，不排队）。
+   transition-* 取的是"变化之后"那一份样式，所以下面 in 那条**不要**写
+   transition-duration，否则出场时序会把入场时序顶掉。 */
+.cube__slot[data-state='in'] .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.cube__slot[data-state='out'] .reveal {
+  transition-duration: var(--dur-2);
+  transition-delay: 0ms;
+}
+
 /* 停用的面：不可见 = 不合成、不参与焦点与读屏。
    驱动会把"背对镜头"的面也停用（见 lib/cube.ts 的 isFrontFacing）——
    相机在棱柱轴上，背对的面会被从内侧看到，也就是镜像的正文。 */

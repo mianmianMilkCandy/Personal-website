@@ -497,6 +497,19 @@ button {
   transform: none;
 }
 
+/* ── 出场态：退回入场的起始位姿（transform 仍由上面的 variant 决定）───────
+   只改时序：更快、且不排队。退场必须赶在"这一面转过去"之前走完，否则
+   320ms 的淡出会被压在斜面上，看起来只是变糊。
+
+   独立一个 is-out 类而不是写 `.reveal:not(.is-in)`：后者会把入场时序也一起
+   改掉 —— 立方体里的 .reveal 从来没有 is-in（它们的相位挂在 .cube__slot 的
+   data-state 上），`not(.is-in)` 会把那 50 多个元素的入场全部降成 dur-2 且
+   丢掉阶梯延迟。这个坑踩过一次，别再合并。 */
+.reveal.is-out {
+  transition-duration: var(--dur-2);
+  transition-delay: 0ms;
+}
+
 /* ── 尊重系统"减少动态效果"设置：全部退化为直接显示 ─────────────────── */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -509,8 +522,11 @@ button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  /* .cube__slot .reveal 也要列上：立方体里的元素没有 is-in，
+     它们的显示状态挂在所在面的 data-state 上（见 Cube.css）。 */
   .reveal,
-  .reveal.is-in {
+  .reveal.is-in,
+  .cube__slot .reveal {
     opacity: 1;
     transform: none;
   }

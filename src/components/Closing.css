@@ -193,6 +193,34 @@
   background: var(--foot-glass);
 }
 
+/* 页脚自己入场：它在这屏的最底边，晚于正文出现（260ms），收尾才有"落款"感。
+   只在立方体里生效，拆掉 3D 时自动回到始终可见。 */
+.cube__slot .closing__foot {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+  transition-delay: 260ms;
+}
+
+.cube__slot[data-state='in'] .closing__foot {
+  opacity: 1;
+  transform: none;
+}
+
+.cube__slot[data-state='out'] .closing__foot {
+  transition-duration: var(--dur-2);
+  transition-delay: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube__slot .closing__foot {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .closing__foot-inner {
   display: flex;
   flex-wrap: wrap;

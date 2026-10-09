@@ -34,6 +34,52 @@
   border-bottom: 1px solid var(--line);
 }
 
+/* ── 卡片内部两处的进出场 ────────────────────────────────────────────────
+   整张卡已经是一个 .reveal（scale 入场），这里是它内部"抬头行"与"视觉带"
+   各自的第二拍，让卡片不是一个整块弹出来：
+     抬头行（编号 / 周期）从上方落下；
+     视觉带用 clip-path 从左往右擦开（画作是"卷"出来的，不是淡出来的）。
+
+   只在立方体里生效，拆掉 3D 时两处都回到始终可见。 */
+.cube__slot .project__head {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+  transition-delay: 60ms;
+}
+
+.cube__slot .project__visual {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path var(--dur-3) var(--ease-out);
+}
+
+.cube__slot[data-state='in'] .project__head {
+  opacity: 1;
+  transform: none;
+}
+
+.cube__slot[data-state='in'] .project__visual {
+  clip-path: inset(0 0 0 0);
+}
+
+.cube__slot[data-state='out'] .project__head,
+.cube__slot[data-state='out'] .project__visual {
+  transition-duration: var(--dur-2);
+  transition-delay: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube__slot .project__head {
+    opacity: 1;
+    transform: none;
+  }
+  .cube__slot .project__visual {
+    clip-path: none;
+  }
+}
+
 .project__index {
   color: var(--accent-text);
 }

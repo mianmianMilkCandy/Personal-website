@@ -40,6 +40,55 @@
   overflow: hidden;
 }
 
+/* ── 首屏画的进出场（幕布效果）─────────────────────────────────────────────
+   这一层不是 .reveal（它要挂 ref 做视差），所以自己接立方体的相位。
+
+   做法与正文不同，理由：**其它面的画（--sec-art）在转走时是留在面上的**，
+   只有这块 <picture> 是 DOM 里的真图层。要是让它跟着正文一起淡到 0，转过
+   首屏时上半屏会变成一块纯黑（实测截图确认过：脊线位置上半屏全黑，与
+   下半屏那张还亮着的回廊画明显不是一套语言）。
+
+   所以这里只做"压暗 → 重新点亮"：
+     · 面不在场 → 压到 35% 并轻微推近（画还在，只是退到后面）；
+     · 面转正   → 用 animation 从当前这个暗态续到全亮 + 归位。
+   用 animation 而不是 transition 是因为**要能重播**：类名每次重新匹配都会
+   从头播一遍（transition 只在值变化时播，第二次进场就没有了）。from 的位姿
+   与基态完全一致，所以重播时不会有跳变。
+
+   整段以 .cube__slot 开头：拆掉 3D 走降级路径时这条不匹配任何元素，
+   首屏画自动回到"始终全亮"，不会黑屏。 */
+.cube__slot .hero__media {
+  opacity: 0.35;
+  transform: scale(1.055);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+
+.cube__slot[data-state='in'] .hero__media {
+  /* 动画压过 transition，这里显式关掉它，避免两个机制同时改 opacity */
+  transition: none;
+  animation: heroCurtain var(--dur-3) var(--ease-out) 100ms both;
+}
+
+@keyframes heroCurtain {
+  from {
+    opacity: 0.35;
+    transform: scale(1.055);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube__slot .hero__media {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .hero__media picture {
   display: contents;
 }
