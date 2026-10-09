@@ -1,6 +1,18 @@
 /* ============================================================================
-   Seam · 区块接缝带
-   五段渐变：透明 → 半透明 → 不透明 → 半透明 → 透明
+   Seam · 区块折痕
+   ----------------------------------------------------------------------------
+   这里曾经是一条「透明 → 半透明 → 不透明 → 半透明 → 透明」的遮盖带，用来
+   盖住两张背景画之间的硬边。逐行量过截图才知道**那条带子自己就是问题**：
+   它两端透明会露出更亮的 .page-bg，中段又比两侧都暗，于是交界成了
+   「暗 → 亮线 → 更暗 → 亮线 → 中亮」的条码（实测数字见 tokens.css 里
+   --seam-* 那一段注释）。
+
+   现在两条职责分开，各自只做一件事：
+     ① 过渡由两张画自己承载 —— .has-art::before 两端 mask 淡出（base.css）；
+     ② 折痕只留一条发丝线 + 下方一小段折影，给交界一个"折过一次"的理由。
+
+   lg 档（首屏 → 正文）多一件：首屏底那层近黑必须被不透明地接住
+   （--seam-ramp），否则透明端会再次露出整页背景，重现 +33 的亮阶跃。
    ========================================================================== */
 
 .seam {
@@ -8,37 +20,54 @@
   z-index: 2;
   height: var(--seam-h);
   pointer-events: none;
+}
+
+/* 折痕线：全站发丝线的同一档。横向两端淡出 —— 全站没有别的通版线，
+   通到底会变成一条"表格边框"，中间实、两端散才像折痕。 */
+.seam::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
   background: linear-gradient(
-    180deg,
-    var(--seam-edge) 0%,
-    var(--seam-mid) 26%,
-    var(--seam-core) 50%,
-    var(--seam-mid) 74%,
-    var(--seam-edge) 100%
+    90deg,
+    transparent 0%,
+    var(--seam-line) 14%,
+    var(--seam-line) 86%,
+    transparent 100%
   );
+}
+
+/* 折影：纸折的暗侧只落在后一页上，所以只向下投一小段 */
+.seam::after {
+  content: '';
+  position: absolute;
+  inset: 1px 0 auto 0;
+  height: var(--seam-shadow-h);
+  background: linear-gradient(180deg, var(--seam-shadow), transparent);
 }
 
 .seam--sm {
-  --seam-h: clamp(3rem, 6vh, 5rem);
+  --seam-h: clamp(1.5rem, 3vh, 2.5rem);
+  --seam-shadow-h: 0.75rem;
 }
 
 .seam--md {
-  --seam-h: clamp(5rem, 11vh, 9rem);
+  --seam-h: clamp(2.25rem, 4.5vh, 3.5rem);
+  --seam-shadow-h: 1.25rem;
 }
 
 .seam--lg {
-  --seam-h: clamp(7rem, 16vh, 13rem);
+  --seam-h: clamp(4.5rem, 10vh, 7.5rem);
+  --seam-shadow-h: 1.75rem;
 }
 
-/* 首屏那张画最亮，接进正文需要更长的过渡距离 */
+/* 首屏→正文：不透明地接住首屏底，再往下放开。
+   放开用 mask 而不是把背景色渐变成 transparent —— mask 只动 alpha，
+   不会在坡道中段把 rgb 一起往黑里插出一条偏暗的带子。
+   45% 之后才开始放开，是为了让上面的折影整段落在不透明区里。 */
 .seam--lg {
-  background: linear-gradient(
-    180deg,
-    var(--seam-edge) 0%,
-    var(--seam-mid) 22%,
-    var(--seam-core) 48%,
-    var(--seam-core) 62%,
-    var(--seam-mid) 82%,
-    var(--seam-edge) 100%
-  );
+  background: var(--seam-ramp);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 45%, transparent 100%);
 }

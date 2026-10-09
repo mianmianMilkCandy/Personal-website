@@ -130,7 +130,19 @@ button {
 }
 
 .section--alt {
+  /* 兜底：浏览器不支持相对颜色语法时，--surface-alt-0 在计算值阶段失效，
+     会让整条 background 声明作废 —— 先给一版纯色表面（只是少了边缘淡出）。
+     颜色仍走 --surface-alt，淡出端用它的零透明版本（见 tokens.css）。 */
   background: var(--surface-alt);
+  /* 表面色在区块边界处阶跃本身就是一条硬边（58% 的近黑压下来，
+     交界处会出现 -18 的单行落差），所以两端淡出。 */
+  background: linear-gradient(
+    180deg,
+    var(--surface-alt-0) 0%,
+    var(--surface-alt) var(--art-fade),
+    var(--surface-alt) calc(100% - var(--art-fade)),
+    var(--surface-alt-0) 100%
+  );
 }
 
 /* 发丝分隔线：贯穿版心的 1px 线，全站一致性来源 */
@@ -320,6 +332,24 @@ button {
   background-size: cover;
   background-position: center;
   opacity: var(--sec-art-opacity);
+  /* 两端淡出：区块之间的过渡交给画自己承载 —— 上一张画淡到 0、下一张画从 0
+     淡起，中间只剩背景本身，于是不存在"谁盖住谁"的硬接缝。接缝元素因此
+     可以退化成一条折痕，而不是一块不透明的遮盖带（根因见 tokens.css 的
+     --seam-* 注释）。 */
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--art-fade),
+    #000 calc(100% - var(--art-fade)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--art-fade),
+    #000 calc(100% - var(--art-fade)),
+    transparent 100%
+  );
 }
 
 /* 内容必须抬到画之上。只列真实存在的直接子元素，避免误伤

@@ -11,7 +11,16 @@
   min-height: 100svh;
   overflow: hidden;
   isolation: isolate;
+  /* 兜底：相对颜色语法不可用时 --surface-deep-0 会在计算值阶段失效，
+     整条声明作废 —— 先给一版纯色表面。 */
   background: var(--surface-deep);
+  /* 顶端淡入：表面色在区块边界处阶跃本身就是一条硬边，而收尾页上面
+     正好是一条折痕。底端保持实色 —— 页脚要落在一块实的暗底上。 */
+  background: linear-gradient(
+    180deg,
+    var(--surface-deep-0) 0%,
+    var(--surface-deep) var(--art-fade)
+  );
   /* 收尾页整屏只有一句大标题 + 几个链接，没有正文段落要保护，
      所以画可以比其它区块亮一档，让"回廊尽头看海"（原图 4）真的看得见。
      其它区块维持全局的 --sec-art-opacity（dusk 0.2 / day 0.26）。 */
