@@ -18,10 +18,10 @@
       }
     </script>
 
-    <title>全栈开发工程师 · 个人主页</title>
+    <title>云绵绵甜奶糖 · Python 后端 / AI 应用开发</title>
     <meta
       name="description"
-      content="全栈开发工程师个人主页 —— 工程实践、精选项目与技术栈。"
+      content="云绵绵甜奶糖的个人主页 —— Python 后端与 AI 应用开发，本地知识库 / RAG 实践，两项软件著作权与两个开源项目。"
     />
 
     <!-- 字体：Inter Tight（拉丁显示体）+ JetBrains Mono（等宽元数据）。
@@ -34,11 +34,13 @@
     />
 
     <!-- 首屏画作预加载。两条 preload 的 media 必须与 Hero.tsx 里 <picture> 的
-         <source media> 完全一致 —— 否则会给用竖版的视口白拉一张横版大图。 -->
+         <source media> 完全一致 —— 否则会给用竖版的视口白拉一张横版大图。
+         地址**必须带 %BASE_URL%**（vite.config.ts 里 base: './'）：写成 '/media/…'
+         在子目录部署（GitHub Pages 的 /repo/ 路径）下会 404，白拉两张、白报两条错。 -->
     <link
       rel="preload"
       as="image"
-      href="/media/hero-cat.webp"
+      href="%BASE_URL%media/hero-cat.webp"
       type="image/webp"
       fetchpriority="high"
       media="(min-width: 901px) and (min-aspect-ratio: 1/1)"
@@ -46,7 +48,7 @@
     <link
       rel="preload"
       as="image"
-      href="/media/hero-cat-portrait.webp"
+      href="%BASE_URL%media/hero-cat-portrait.webp"
       type="image/webp"
       fetchpriority="high"
       media="(max-width: 900px), (max-aspect-ratio: 1/1)"

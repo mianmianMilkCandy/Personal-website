@@ -4,17 +4,19 @@
    本文件的全部内容来自用户的真实简历（云绵绵甜奶糖 · 个人简历），
    不是占位内容。要改简历只动这里，不用碰任何组件。
 
-   仍然留白 / 待补的三项（都有自动回落机制，不填也能正常上线）：
+   仍然留白 / 待补的两项（都有自动回落机制，不填也能正常上线）：
      · 手机号 —— 按用户要求**不上站**（邮箱 + 微信 + GitHub 已够用）；
-     · 头像 —— 把图片存成 public/media/portrait.jpg 即自动生效，
-                缺失时回落成 portraitFallback 的那个字；
      · 简历 PDF —— resumeUrl 留空则按钮不出现。
+
+   头像已就位：`public/media/portrait.jpg`（4:5，900×1125）。
    ========================================================================== */
 
-/** 尚未填充的字段清单 —— 仅开发模式展示，用于提醒替换占位内容。 */
-export const UNFILLED: string[] = [
-  '头像照片（把图片放到 public/media/portrait.jpg 即自动生效；缺失时显示 portraitFallback 字母）',
-]
+/**
+ * 尚未填充的字段清单 —— 仅开发模式展示，用于提醒替换占位内容。
+ * 已清空：头像补上之后，开发模式左下角那条提示会自动消失
+ * （App.tsx 里判的是 `UNFILLED.length > 0`）。
+ */
+export const UNFILLED: string[] = []
 
 export type SocialLink = {
   /** 展示名，如 GitHub */
@@ -182,10 +184,6 @@ export const profile = {
         'PyInstaller 单文件打包',
         'PowerShell 安装 / 卸载脚本',
       ],
-    },
-    {
-      group: '算法基础',
-      items: ['DFS / BFS / A* / MCTS', '反向传播手写实现', 'MC Dropout 不确定性'],
     },
   ] as Capability[],
 }
