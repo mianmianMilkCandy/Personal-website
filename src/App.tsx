@@ -2,13 +2,13 @@ import { useEffect, type CSSProperties } from 'react'
 
 import About from './components/About'
 import Closing from './components/Closing'
+import Cube, { type CubeFace } from './components/Cube'
 import DevNotice from './components/DevNotice'
 import DynamicCursor from './components/DynamicCursor'
 import EntryGate from './components/EntryGate'
 import Hero from './components/Hero'
 import Nav from './components/Nav'
 import Projects from './components/Projects'
-import Seam from './components/Seam'
 import { UNFILLED } from './data/profile'
 import { assetUrl } from './lib/asset'
 import { initClickShine } from './lib/clickShine'
@@ -24,6 +24,29 @@ const pageBgStyle = {
   '--page-bg-image': `url(${assetUrl('media/ambient-portrait.webp')})`,
 } as CSSProperties
 
+/**
+ * 面表 —— 整站就是这根棱柱的九个侧面。
+ *
+ * 为什么是九个而不是原来的四个版块：立方体滚动的几何硬约束是**每个面恰好
+ * 一屏高**（见 lib/cube.ts），而原来的「关于我」「精选项目」都是内容撑高的
+ * 长区块（关于区 ≈ 3 屏、项目区 ≈ 4 屏）。所以按内容语义重新分页 ——
+ * 内容一条没删，只是换了每屏装多少。
+ *
+ * id 同时是锚点：导航与深链（#about / #projects / #contact）直接落在面上，
+ * 所以 Nav 与 useActiveSection 一行都不用改。
+ */
+const FACES: CubeFace[] = [
+  { id: 'hero', node: <Hero /> },
+  { id: 'about', node: <About part="intro" /> },
+  { id: 'about-contact', node: <About part="contact" /> },
+  { id: 'about-story', node: <About part="story" /> },
+  { id: 'about-caps', node: <About part="caps" /> },
+  { id: 'projects', node: <Projects part="first" /> },
+  { id: 'work-02', node: <Projects part="second" /> },
+  { id: 'work-03', node: <Projects part="third" /> },
+  { id: 'contact', node: <Closing /> },
+]
+
 export default function App() {
   // 全站按钮的点击光影：文档级一个监听器，见 src/lib/clickShine.ts
   useEffect(() => initClickShine(), [])
@@ -37,16 +60,9 @@ export default function App() {
       <Nav />
 
       <main id="main">
-        <Hero />
-        {/* 每个区块背后都是不同的画。区块之间的过渡由画自己承载（两张画各自
-            两端 mask 淡出/淡入），Seam 只画一条折痕。lg = 首屏→正文那一档，
-            它还额外用一块不透明底色接住首屏底部的近黑。见 Seam.tsx 顶部说明 */}
-        <Seam size="lg" />
-        <About />
-        <Seam />
-        <Projects />
-        <Seam />
-        <Closing />
+        {/* 交界不再用遮盖带也不再画折痕：相邻两面本身就成 90° 棱，
+            过渡由棱承担。Seam 组件与其令牌保留给"关闭 3D"的降级路径。 */}
+        <Cube faces={FACES} />
       </main>
 
       {/* 氛围层与颗粒层都固定定位、pointer-events 关闭，绝不拦截交互 */}

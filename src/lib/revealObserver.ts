@@ -14,6 +14,24 @@ const REVEALED_CLASS = 'is-in'
 
 let observer: IntersectionObserver | null = null
 
+/* ----------------------------------------------------------------------------
+   立方体舞台里的元素不走观察器
+   ----------------------------------------------------------------------------
+   舞台是 position: fixed 的，面只做 3D 变换、不在文档流里移动 ——
+   观察器会在首帧把**所有**面都判成"在视口里"，于是九个面的入场动画同时播。
+   所以：面里的元素改成登记到该面的队列，由立方体驱动在"这一面进场时"揭示。
+   ========================================================================== */
+
+const cubeQueues = new WeakMap<Element, Set<Element>>()
+
+/** 由立方体驱动调用：把某个面里登记过的元素一次性揭示。 */
+export function revealCubeFace(slot: Element): void {
+  const queue = cubeQueues.get(slot)
+  if (!queue) return
+  for (const el of queue) el.classList.add(REVEALED_CLASS)
+  queue.clear()
+}
+
 function getObserver(): IntersectionObserver {
   if (observer) return observer
   observer = new IntersectionObserver(
@@ -41,6 +59,21 @@ export function observeReveal(el: Element): () => void {
     el.classList.add(REVEALED_CLASS)
     return () => {}
   }
+
+  // 在立方体舞台里：登记到所属面的队列，等驱动把这一面转进来时再揭示
+  const slot = el.closest('.cube__slot')
+  if (slot) {
+    let queue = cubeQueues.get(slot)
+    if (!queue) {
+      queue = new Set()
+      cubeQueues.set(slot, queue)
+    }
+    queue.add(el)
+    return () => {
+      queue?.delete(el)
+    }
+  }
+
   const obs = getObserver()
   obs.observe(el)
 

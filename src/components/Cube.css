@@ -1,0 +1,113 @@
+/* ============================================================================
+   Cube · 立方体舞台
+   ----------------------------------------------------------------------------
+   结构：
+     .cube__track   唯一在文档流里的元素，高度 = 面数 × 100svh —— 它提供滚动
+                    距离、原生滚动条与每个面的锚点落点
+     .cube__stage   position: fixed 的 100svh 窗口，perspective 在这里
+     .cube__slot    一个"面"，由驱动逐帧写 transform 与 --shade
+
+   面高必须是 100svh（= 舞台高），这是几何硬约束，不是可调参数（见 lib/cube.ts）。
+   ========================================================================== */
+
+.cube {
+  position: relative;
+}
+
+/* 锚点放在「面起点 + 导航高度」处：base.css 里有 scroll-padding-top: var(--nav-h)，
+   浏览器会把落点再上移一个导航高度，于是刚好落在面的起点上（i × 100svh）。
+   若哪天把 scroll-padding-top 改成 0，这里也要同步去掉 --nav-h。 */
+.cube__track {
+  position: relative;
+  height: calc(var(--face-count, 1) * 100svh);
+}
+
+.cube__anchor {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.cube__stage {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100svh;
+  overflow: hidden;
+  perspective: var(--cube-perspective);
+  perspective-origin: 50% 50%;
+}
+
+.cube__slot {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  overflow: hidden;
+  transform-origin: 50% 50%;
+  /* 面内是"一屏"，区块级的超大留白要压下来，内容才装得进 100svh。
+     只压大档间距，小间距保持原样（贴纸、标签的节奏感不丢）。 */
+  --sp-10: 4.5rem;
+  --sp-9: 3rem;
+  --sp-8: 2.75rem;
+  --sp-7: 2rem;
+}
+
+/* 假光照：颜色走令牌（dusk 近黑 / day 暖棕），深浅由驱动的 --shade 控制 */
+.cube__slot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--cube-shade);
+  opacity: var(--shade, 0);
+}
+
+/* 停用的面：不可见 = 不合成、不参与焦点与读屏。
+   驱动会把"背对镜头"的面也停用（见 lib/cube.ts 的 isFrontFacing）——
+   相机在棱柱轴上，背对的面会被从内侧看到，也就是镜像的正文。 */
+.cube__slot[data-parked] {
+  visibility: hidden;
+}
+
+/* 面内的正文容器：垂直居中；内容比一屏高时用 safe 让溢出只发生在下边 */
+.face-body {
+  height: 100%;
+  display: grid;
+  align-content: center;
+  align-content: safe center;
+}
+
+/* ── 面化之后，原先"长区块"里的几处版式要跟着改 ────────────────────────── */
+
+/* 关于区原先是「左栏 sticky + 右栏正文」的两栏长区块，拆面后：
+   自述独占一面，要给它一个可读宽度；左栏不再吸顶 */
+.cube__slot .about__bio {
+  max-width: 58rem;
+}
+
+.cube__slot .about__aside {
+  position: static;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-8);
+}
+
+.cube__slot .about__block,
+.cube__slot .projects__list--solo {
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+/* 面与面之间的交界由"棱"承担，画作两端不再需要淡出；
+   表面色也不再需要两端渐隐（棱本身就是分界）。 */
+.cube .has-art::before {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.cube .section--alt {
+  background: var(--surface-alt);
+}
