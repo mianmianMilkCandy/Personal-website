@@ -8,10 +8,11 @@ import DynamicCursor from './components/DynamicCursor'
 import EntryGate from './components/EntryGate'
 import Hero from './components/Hero'
 import Nav from './components/Nav'
-import Projects from './components/Projects'
+import Projects, { PROJECT_FACES } from './components/Projects'
 import { UNFILLED } from './data/profile'
 import { assetUrl } from './lib/asset'
 import { initClickShine } from './lib/clickShine'
+import { initSmoothAnchors } from './lib/smoothAnchors'
 import './App.css'
 
 /**
@@ -25,15 +26,18 @@ const pageBgStyle = {
 } as CSSProperties
 
 /**
- * 面表 —— 整站就是这根棱柱的九个侧面。
+ * 面表 —— 整站就是这根棱柱的若干个侧面（面数 = 数组长度，动态）。
  *
- * 为什么是九个而不是原来的四个版块：立方体滚动的几何硬约束是**每个面恰好
+ * 为什么从原来的四个版块变成 9 个面：立方体滚动的几何硬约束是**每个面恰好
  * 一屏高**（见 lib/cube.ts），而原来的「关于我」「精选项目」都是内容撑高的
  * 长区块（关于区 ≈ 3 屏、项目区 ≈ 4 屏）。所以按内容语义重新分页 ——
  * 内容一条没删，只是换了每屏装多少。
  *
  * id 同时是锚点：导航与深链（#about / #projects / #contact）直接落在面上，
  * 所以 Nav 与 useActiveSection 一行都不用改。
+ *
+ * 精选项目是**一面一个项目**：projects.ts 里有几条，这里就补几个面。
+ * 新增项目时只改这两处（数据 + 面表），导航与几何都会自动跟上。
  */
 const FACES: CubeFace[] = [
   { id: 'hero', node: <Hero /> },
@@ -41,15 +45,21 @@ const FACES: CubeFace[] = [
   { id: 'about-contact', node: <About part="contact" /> },
   { id: 'about-story', node: <About part="story" /> },
   { id: 'about-caps', node: <About part="caps" /> },
-  { id: 'projects', node: <Projects part="first" /> },
-  { id: 'work-02', node: <Projects part="second" /> },
-  { id: 'work-03', node: <Projects part="third" /> },
+  { id: 'projects', node: <Projects part="index" /> },
+  /* 一面一个项目：面的数量跟着 projects.ts 走，不手写 */
+  ...PROJECT_FACES.map((face) => ({
+    id: `work-${face.id}`,
+    node: <Projects part={face.id} />,
+  })),
   { id: 'contact', node: <Closing /> },
 ]
 
 export default function App() {
   // 全站按钮的点击光影：文档级一个监听器，见 src/lib/clickShine.ts
   useEffect(() => initClickShine(), [])
+
+  // 平滑滚动只留给锚点跳转，滚轮保持原生瞬时（见 lib/smoothAnchors.ts）
+  useEffect(() => initSmoothAnchors(), [])
 
   return (
     <>

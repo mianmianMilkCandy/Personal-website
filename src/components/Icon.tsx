@@ -166,7 +166,9 @@ export function socialIcon(label: string): IconName {
   if (l.includes('微信') || l.includes('wechat')) return 'wechat'
   if (l.includes('电话') || l.includes('tel')) return 'phone'
   if (l.includes('邮') || l.includes('mail')) return 'mail'
-  if (l.includes('博客') || l.includes('掘金') || l.includes('blog')) return 'leaf'
+  /* 备注：原先这里还有一条「博客 / 掘金 / blog → leaf」的映射。
+     作者没有博客，profile.socials 里那一项已删除（2026-10-09），
+     所以这条死分支也一起删了，不留"看起来还支持"的假接口。 */
   return 'globe'
 }
 

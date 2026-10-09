@@ -4,6 +4,10 @@ import './DynamicCursor.css'
 
 /** 环形光标的跟随缓动系数：越小越"拖"，0.16 大约是跟手但不僵硬的甜点 */
 const RING_EASE = 0.16
+/** 位移大于它才算"还在走"（同时决定缓动何时切到吸附） */
+const EASE_STEP = 0.05
+/** 吸附容差：小于它就直接对齐，且**不再续帧**（见 render() 里的说明） */
+const SNAP_EPSILON = 0.01
 /** 悬停在可点元素上时环放大到多少 */
 const HOVER_SCALE = 1.9
 /** 按下时缩到多少 */
@@ -77,9 +81,18 @@ export default function DynamicCursor() {
     }
 
     const onOver = (e: PointerEvent) => {
-      const next = isInteractive(e.target) ? HOVER_SCALE : 1
-      if (next === hoverScale) return
-      hoverScale = next
+      /* 已经是最大态就不必再问"这个元素能不能点"了 —— isInteractive 里那次
+         `closest()` 是沿 DOM 向上的遍历，而 pointerover 在指针扫过页面时
+         是**每个元素都触发一次**的（长列表、卡片、图标密集的地方很密）。
+         先短路掉最常见的情形（在正文上移动），再看提示态要不要变。 */
+      if (hoverScale > 1) {
+        if (isInteractive(e.target)) return
+        hoverScale = 1
+        kick()
+        return
+      }
+      if (!isInteractive(e.target)) return
+      hoverScale = HOVER_SCALE
       kick()
     }
 
@@ -119,15 +132,28 @@ export default function DynamicCursor() {
 
       const dx = px - rx
       const dy = py - ry
-      if (Math.abs(dx) > 0.05 || Math.abs(dy) > 0.05) {
+      if (Math.abs(dx) > EASE_STEP || Math.abs(dy) > EASE_STEP) {
         rx += dx * RING_EASE
         ry += dy * RING_EASE
         moving = true
       } else if (rx !== px || ry !== py) {
-        // 收敛：直接吸附到精确位置，避免永远差 0.04px 而让循环停不下来
-        rx = px
-        ry = py
-        moving = true
+        /* 收敛：吸附到精确位置。
+           ⚠️ 判据必须带容差（`rx !== px` 这种严格比较会**永远为真**）：
+           `rx += dx * 0.16` 是浮点乘法，落不到整数坐标上 —— 比如 px=800、
+           rx=799.9999999999999 时，"差值还剩多少"已经小于 EASE_STEP，
+           而"rx 与 px 严格不等"仍然成立。此时若把 moving 置为 true，
+           rAF 循环就永远停不下来，全站多出一个恒定 60fps 的空转
+           （实测：空闲 rAF 121 次/秒，且 DOM 值其实早已不再变化）。
+           容差取 0.01px：远小于肉眼可辨的位移，也不可能是"还没走完"。 */
+        if (Math.abs(dx) > SNAP_EPSILON || Math.abs(dy) > SNAP_EPSILON) {
+          rx = px
+          ry = py
+          moving = true
+        } else {
+          // 已经足够近：静默对齐，且**不算作"还在动"**，让循环停下
+          rx = px
+          ry = py
+        }
       }
 
       const target = hoverScale * (pressed ? PRESS_SCALE : 1)

@@ -10,6 +10,74 @@
   gap: var(--sp-8);
 }
 
+/* ── 索引面：只列「编号 + 项目名 + 英文名 + 周期」─────────────────────────
+   存在的理由见 Projects.tsx 顶部说明：详情卡高约 1080px，一屏放不下第二张，
+   所以先用一屏把所有项目摆出来当目录，再一面一个地翻进去看详情。
+   行高与留白刻意压小 —— 这一屏是"目录"，不是内容。 */
+.projects__index {
+  display: grid;
+  border-top: 1px solid var(--line);
+}
+
+.projects__index-row {
+  border-bottom: 1px solid var(--line);
+}
+
+.projects__index-row a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: baseline;
+  gap: var(--sp-5);
+  padding-block: var(--sp-6);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.projects__index-row a:hover {
+  color: var(--accent-text);
+}
+
+.projects__index-no {
+  color: var(--accent-text);
+}
+
+.projects__index-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.projects__index-en {
+  color: var(--fg-3);
+}
+
+.projects__index-period {
+  color: var(--fg-3);
+}
+
+.projects__index-arrow {
+  width: 1rem;
+  height: 1rem;
+  align-self: center;
+  color: var(--fg-4);
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.projects__index-row a:hover .projects__index-arrow {
+  color: var(--accent);
+}
+
+@media (max-width: 1000px) {
+  /* 窄屏：英文名让位，只留编号 / 中文名 / 周期 */
+  .projects__index-row a {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+  .projects__index-en {
+    display: none;
+  }
+}
+
 .project {
   position: relative;
   overflow: hidden;
@@ -50,9 +118,23 @@
   transition-delay: 60ms;
 }
 
-.cube__slot .project__visual {
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path var(--dur-3) var(--ease-out);
+/* ⚠️ 擦开的动作**不要**做成 clip-path 过渡。
+   `transition: clip-path` 每一帧都要把这一层连同里面的画整整重新栅格化一遍
+   （整层重绘，CPU 光栅时尤其贵），正是滚动/翻面时最费的那类动画。改成
+   「静态裁切 + 合成层位移」：外层 .project__visual 负责 overflow 裁切
+   （静态值，不参与动画），内层 .project__visual-wipe 只做 scaleX。
+   观感一致：wipe 从左边 0 宽铺到全宽，外层始终把它裁在带子里；而 scaleX
+   走合成器，不重绘内容。 */
+.project__visual-wipe {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--sp-6);
+  transform-origin: left center;
+  transform: scaleX(0);
+  will-change: transform;
+  transition: transform var(--dur-3) var(--ease-out);
 }
 
 .cube__slot[data-state='in'] .project__head {
@@ -60,12 +142,12 @@
   transform: none;
 }
 
-.cube__slot[data-state='in'] .project__visual {
-  clip-path: inset(0 0 0 0);
+.cube__slot[data-state='in'] .project__visual-wipe {
+  transform: scaleX(1);
 }
 
 .cube__slot[data-state='out'] .project__head,
-.cube__slot[data-state='out'] .project__visual {
+.cube__slot[data-state='out'] .project__visual-wipe {
   transition-duration: var(--dur-2);
   transition-delay: 0ms;
 }
@@ -75,8 +157,8 @@
     opacity: 1;
     transform: none;
   }
-  .cube__slot .project__visual {
-    clip-path: none;
+  .project__visual-wipe {
+    transform: none;
   }
 }
 
@@ -227,16 +309,6 @@
 .project:hover .project__visual::after {
   opacity: 1;
   transform: translateX(45%);
-}
-
-.project__badge {
-  position: absolute;
-  top: var(--sp-4);
-  right: var(--sp-4);
-  padding: 0.3rem 0.55rem;
-  border: 1px dashed var(--line-2);
-  border-radius: var(--r-1);
-  color: var(--fg-3);
 }
 
 /* ── 正文双栏 ─────────────────────────────────────────────────────────── */

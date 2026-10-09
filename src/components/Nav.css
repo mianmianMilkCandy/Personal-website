@@ -10,13 +10,17 @@
   display: flex;
   align-items: center;
   border-bottom: 1px solid transparent;
+  /* ⚠️ 这里**不**过渡 backdrop-filter：不要动它的值就不该把它写进 transition，
+     否则每次吸顶/还原都要让浏览器为一次"模糊形成 → 模糊消失"起一条合成
+     动画（整条导航每一帧重新采样背景）。底色与描边各过渡自己的就够。 */
   transition:
     background var(--dur-2) var(--ease-out),
-    border-color var(--dur-2) var(--ease-out),
-    backdrop-filter var(--dur-2) var(--ease-out);
+    border-color var(--dur-2) var(--ease-out);
 }
 
-/* 只在离开首屏后给导航底色：压在画面上时保持通透，画面才不被切一刀 */
+/* 只在离开首屏后给导航底色：压在画面上时保持通透，画面才不被切一刀。
+   这一层是全站**唯一**保留 backdrop-filter 的地方（它在转动的舞台之外，
+   见 Cube.css 的"面内一律不做 backdrop-filter"），所以模糊留得住。 */
 .nav.is-stuck {
   background: var(--nav-glass);
   backdrop-filter: blur(16px) saturate(150%);

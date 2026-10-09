@@ -20,6 +20,20 @@ function shouldShowGate(): boolean {
   }
 }
 
+/** 幕屏灰显后的淡出时长：正本是 tokens.css 的 `--dur-gate`，
+ *  这里只在读不到变量时兜底（所以 CSS 里的值与它保持一致）。 */
+const GATE_FADE_FALLBACK = 620
+
+/** 读 `--dur-gate`（px 之外的带单位时长要自己剥掉单位）。 */
+function gateFadeMs(): number {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue('--dur-gate')
+    .trim()
+  const ms = Number.parseFloat(raw)
+  if (!Number.isFinite(ms)) return GATE_FADE_FALLBACK
+  return raw.endsWith('ms') ? ms : ms * 1000
+}
+
 /**
  * 入场幕屏（对齐参考站第二张图）。
  *
@@ -46,10 +60,12 @@ export default function EntryGate() {
     })
   }, [])
 
-  // 幕屏消失：等淡出动画走完再卸载
+  // 幕屏消失：等淡出动画**真的走完**再卸载。
+  // 延时取自 tokens.css 的 --dur-gate（与 .gate.is-leaving 的 transition 同一个
+  // 令牌），而不是写死 620 —— 以后调那个时长时两边不会脱钩。
   useEffect(() => {
     if (!leaving) return
-    const id = window.setTimeout(() => setVisible(false), 620)
+    const id = window.setTimeout(() => setVisible(false), gateFadeMs())
     return () => window.clearTimeout(id)
   }, [leaving])
 

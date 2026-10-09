@@ -31,53 +31,30 @@ export default function Hero() {
   const [videoOk, setVideoOk] = useState(true)
   const [videoReady, setVideoReady] = useState(false)
 
-  const heroRef = useRef<HTMLElement>(null)
   const mediaRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
 
-  // ① 鼠标跟随聚光：直接写 CSS 变量，避免每帧 setState 引发重渲染
+  /* --------------------------------------------------------------------------
+     首屏的视差：把 `--parallax` 写到**图片自己**身上，而不是父层
+     --------------------------------------------------------------------------
+     父层写了 `will-change: transform`（提升为独立合成层）时，再逐帧改它的
+     子元素 `--parallax` 会把这个 2000px 宽、还带一层 `filter` 调色的 <img>
+     一起拉进重栅格化 —— 卷积滤镜 + 大图重绘是滚动里最贵的一种帧。改成直接
+     给 <img> 写自定义属性：变化的只有它自己的 transform（走合成器），
+     父层与其它合成层不再被牵连。
+
+     幅度仍是 8%（`max` 里的那个系数），只在滚过首屏这一屏的范围内线性变化；
+     滚出首屏后 p 恒为 1，值不再变、也就不再有任何写入。
+     ------------------------------------------------------------------------ */
   useEffect(() => {
-    const hero = heroRef.current
-    if (!hero) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-
-    let frame = 0
-    let x = 0
-    let y = 0
-
-    const apply = () => {
-      frame = 0
-      hero.style.setProperty('--mx', `${x}px`)
-      hero.style.setProperty('--my', `${y}px`)
-    }
-
-    const onMove = (e: PointerEvent) => {
-      const rect = hero.getBoundingClientRect()
-      x = e.clientX - rect.left
-      y = e.clientY - rect.top
-      if (!frame) frame = requestAnimationFrame(apply)
-    }
-
-    hero.addEventListener('pointermove', onMove, { passive: true })
-    return () => {
-      if (frame) cancelAnimationFrame(frame)
-      hero.removeEventListener('pointermove', onMove)
-    }
-  }, [])
-
-  // ② 轻微视差：背景慢于前景（幅度压到 8%）
-  useEffect(() => {
-    const hero = heroRef.current
     const media = mediaRef.current
-    if (!hero || !media) return
+    if (!media) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     let frame = 0
-    // 首屏高度是 min-height:100svh 撑的，与视口绑定，不需要每帧量一次：
-    // 每帧读 offsetHeight 会在滚动里强制一次布局，这里改成只在 resize 时重量。
-    let heroHeight = hero.offsetHeight || 1
-    // 上一帧写进去的值。滚过首屏之后 p 会稳定在 1，这里就不再做无意义的写入
-    // （否则滚动过程中每一帧都会写一次 CSS 变量并让整棵 .hero__media 重新求值）。
+    // 首屏高度是 min-height:100svh 撑的，只在 resize 时重量（不每帧读 offsetHeight）
+    let heroHeight = media.offsetHeight || window.innerHeight || 1
+    // 上一帧写进去的值：同值直接 return，不碰 DOM
     let last = ''
 
     const update = () => {
@@ -94,7 +71,7 @@ export default function Hero() {
     }
 
     const onResize = () => {
-      heroHeight = hero.offsetHeight || 1
+      heroHeight = media.offsetHeight || window.innerHeight || 1
       onScroll()
     }
 
@@ -109,7 +86,7 @@ export default function Hero() {
   }, [])
 
   return (
-    <section id="hero" className="hero" ref={heroRef}>
+    <section id="hero" className="hero">
       <div className="hero__media" ref={mediaRef} aria-hidden="true">
         {imgOk ? (
           <picture>
@@ -160,7 +137,6 @@ export default function Hero() {
         <div className="hero__veil" />
         <div className="hero__vignette" />
         <div className="hero__grid" />
-        <div className="hero__spotlight" />
       </div>
 
       {/* 版式对齐参考站：左下文案块（大标题 + 胶囊动作行）+ 底部 SCENE 小字

@@ -1,27 +1,19 @@
 /* ============================================================================
    个人资料 · 唯一内容源
    ----------------------------------------------------------------------------
-   ⚠️ 重要：工作区里的 `个人简介.txt` 是 0 字节（空文件），因此下面所有个人信息
-   均为**占位占位符**，不是真实资料。请把每一项替换成你的真实信息。
+   本文件的全部内容来自用户的真实简历（云绵绵甜奶糖 · 个人简历），
+   不是占位内容。要改简历只动这里，不用碰任何组件。
 
-   替换完一项，就把 UNFILLED 里对应的那行删掉；UNFILLED 清空后，
-   开发模式下左下角的"占位内容"提示条会自动消失。
+   仍然留白 / 待补的三项（都有自动回落机制，不填也能正常上线）：
+     · 手机号 —— 按用户要求**不上站**（邮箱 + 微信 + GitHub 已够用）；
+     · 头像 —— 把图片存成 public/media/portrait.jpg 即自动生效，
+                缺失时回落成 portraitFallback 的那个字；
+     · 简历 PDF —— resumeUrl 留空则按钮不出现。
    ========================================================================== */
 
 /** 尚未填充的字段清单 —— 仅开发模式展示，用于提醒替换占位内容。 */
 export const UNFILLED: string[] = [
-  '姓名 / 英文名（profile.name、profile.nameEn）',
-  '职位与一句话定位（profile.tagline）',
-  'Hero 大标题与专注领域（profile.heroGreeting、profile.focus）',
-  '所在城市（profile.location）',
-  '邮箱（profile.email）',
-  '手机号（profile.phone）',
-  'GitHub 与其它链接（profile.socials）',
-  '个人简介正文（profile.bio）',
-  '工作/项目经历时间线（profile.timeline）',
-  '技能矩阵取值（profile.capabilities）',
-  '头像照片（把图片放到 public/media/portrait.jpg）',
-  '精选项目 2 / 3 的真实内容（src/data/projects.ts）',
+  '头像照片（把图片放到 public/media/portrait.jpg 即自动生效；缺失时显示 portraitFallback 字母）',
 ]
 
 export type SocialLink = {
@@ -55,15 +47,15 @@ export type Capability = {
 
 export const profile = {
   /* ── 身份 ─────────────────────────────────────────────────────────── */
-  name: '你的名字',
-  nameEn: 'YOUR NAME',
+  name: '云绵绵甜奶糖',
+  nameEn: 'MIANMIAN MILK CANDY',
 
   /** 汉字与英文混排时的副标题，出现在 Hero 大标题下方 */
-  role: '全栈开发工程师',
-  roleEn: 'Full-Stack Engineer',
+  role: 'Python 后端 / AI 应用开发',
+  roleEn: 'Python Backend · AI Application',
 
   /** Hero 的一句话主张：说清你解决什么问题，不要写"热爱编程" */
-  tagline: '从数据库到像素，把想法做成能上线的产品。',
+  tagline: '以 AI 协作开发驱动落地：从需求拆解、编码排错，到打包分发与安装运维，独立交付完整产品。',
 
   /** 首屏欢迎语。2026-10 起首屏标题只用一行「{name}的主页。」，
       这句"欢迎来到，"按用户要求删掉了 —— 那层意思挪到了首屏玻璃卡的
@@ -72,69 +64,129 @@ export const profile = {
   heroGreeting: '欢迎来到，',
 
   /** Hero 玻璃卡里的「专注」一栏 */
-  focus: 'Web · Full-Stack · AI',
+  focus: 'Python · RAG 知识库 · AI 协作开发',
 
   /** 合作状态。首屏玻璃卡目前不显示这一行（用户要求删掉）；
       数据留着：要放回卡片就恢复 Hero.tsx 里 `hero__card-status` 那段和 Hero.css 里对应的状态点样式。 */
-  status: '开放合作机会',
+  status: '求职中 · Python 后端 / AI 应用开发',
   statusTone: 'accent' as 'accent' | 'muted',
-  location: '中国 · 城市待填',
+  location: '中国 · 广东',
 
   /* ── 联系方式 ─────────────────────────────────────────────────────── */
-  email: 'you@example.com',
-  phone: '+86 000 0000 0000',
+  email: '3909103136@qq.com',
+  /** 手机号按用户要求不上站（简历里也没提供）。这一栏留着是为了
+      About.tsx 能原样渲染「电话」那一行 —— 一旦填了值它就会自动出现。 */
+  phone: '',
 
+  /** 顺序即展示顺序（关于区与收尾页都按这个顺序渲染） */
   socials: [
-    { label: 'GitHub', value: 'github.com/yourname', href: 'https://github.com/yourname' },
-    { label: '微信', value: 'your-wechat-id', copy: 'your-wechat-id' },
-    { label: '掘金 / 博客', value: 'blog.example.com', href: 'https://blog.example.com' },
+    {
+      label: 'GitHub',
+      value: 'github.com/mianmianMilkCandy',
+      href: 'https://github.com/mianmianMilkCandy',
+      copy: 'github.com/mianmianMilkCandy',
+    },
+    {
+      label: '微信',
+      value: 'mianmianMilkcandy',
+      copy: 'mianmianMilkcandy',
+    },
   ] as SocialLink[],
 
-  /** 简历 PDF 下载地址；把文件放到 public/ 下即可，如 './resume.pdf' */
+  /** 简历 PDF 下载地址；把文件放到 public/ 下即可，如 './resume.pdf'。
+      留空 → 关于区那个「下载简历 PDF」按钮不渲染。 */
   resumeUrl: '',
 
   /* ── 关于 ─────────────────────────────────────────────────────────── */
   /** 2–3 段。第一段讲你现在做什么，第二段讲能力边界，第三段讲偏好与协作方式。 */
   bio: [
-    '这里应该是一段真实的自我介绍：你现在在做什么、擅长解决哪类问题、最近在打磨什么。占位文字先撑住版面节奏，方便你先看排版效果。',
-    '第二段建议写能力边界：你独立负责过什么规模的事，前后端各自到什么深度，哪些是你敢接、哪些是你还在补的。写清楚边界比堆形容词更可信。',
-    '第三段写协作与偏好：你怎么沟通、怎么拆任务、代码和文档的习惯。招聘方真正想知道的是"和你一起做事是什么体验"。',
+    'Python 后端开发者，具备 MySQL、Django 基础，能独立完成后端服务与数据处理逻辑的开发。目前是全日制本科在读的应届毕业生，求职方向是 Python 后端开发与 AI 应用开发。',
+    '最突出的优势是「AI 协作开发 + 本地知识库搭建」：熟练用 AI 编程助手做需求拆解、技术选型、代码生成与排错调试，并擅长基于向量数据库搭建本地知识库（RAG）。做法不是复制 AI 生成的代码，而是把需求讲清楚、把生成结果审下来、把问题定位到根因 —— 也因此能在较短时间内跨过陌生技术栈，独立交付完整产品。',
+    '对不熟悉的领域，我靠「AI 协作 + 知识库」扎实补齐，而不是停在 demo：项目都走完了从需求分析、编码、测试到打包（PyInstaller）、一键安装分发、卸载运维的完整闭环，并且全部在 GitHub 开源，可以逐行看。',
   ],
 
   /** 头像：换成 public/media/portrait.jpg 后自动生效，无需改代码 */
   portrait: './media/portrait.jpg',
-  /** 没有照片时展示的占位字母 */
-  portraitFallback: 'ME',
+  /** 没有照片时展示的占位字（取名字里的一个字，比 "ME" 更像本人在场） */
+  portraitFallback: '云',
 
   /* ── 经历时间线 ───────────────────────────────────────────────────── */
   timeline: [
     {
-      period: '2024 — 至今',
-      org: '公司 / 团队名称',
-      role: '全栈开发工程师',
-      detail: '负责的业务与系统、你主导的技术决策、可量化的结果（性能提升、成本下降、交付周期）。',
+      period: '2025 — 至今',
+      org: 'C 盘清理工具（clean）',
+      role: '独立开发 · 架构 / 后端 / 前端 / 打包发布',
+      detail:
+        '主导 Python 内嵌 HTTP 服务与垃圾扫描 / 清理引擎，覆盖系统、Chrome / Edge / Firefox、微信、QQ 四类缓存的路径自适应扫描；用 pywebview + Edge WebView2 做桌面壳，PyInstaller 打成约 20 MB 的单文件 exe，目标机无需安装 Python。',
     },
     {
-      period: '2022 — 2024',
-      org: '公司 / 团队名称',
-      role: '开发工程师',
-      detail: '这一段的主要职责与产出。建议每条都带一个数字或一个具体系统名。',
+      period: '2025 — 至今',
+      org: 'DeepCognitiveAgent · AI 学习与推理项目集',
+      role: '独立开发（AI 协作完成）',
+      detail:
+        '5 个 Python 模块：基于 ChromaDB + OpenAI API 的深度记忆聊天机器人（RAG / 事实核查 / 记忆去重与冲突检测）、多引擎异步联网搜索爬虫（Bing / Brave / DuckDuckGo / Wikipedia 并发与故障转移）、通用推理引擎（DFS / BFS / A* / MCTS）、纯标准库神经网络与自我反思心智模型。',
     },
     {
-      period: '2021 — 2022',
-      org: '学校 / 机构名称',
-      role: '学历 / 培训',
-      detail: '专业方向，以及与目标岗位相关的课程、竞赛或毕业设计。',
+      period: '2026',
+      org: '计算机软件著作权 · 2 项',
+      role: '著作权人（原始取得 · 全部权利）',
+      detail:
+        '《社区地慧眼地震风险感知与避险引导软件》V1.0（登记号 2026SR0354008，软著登字第 17568289 号，2026-02-28 登记）；《明眸全域施工安全监测系统》V1.0（登记号 2026SR0448309，软著登字第 17662590 号，2026-03-17 登记）。登记证书原件可在面试时提供备查。',
+    },
+    {
+      period: '在读',
+      org: '全日制本科',
+      role: '在读应届毕业生 · 中国 · 广东',
+      detail:
+        '在校期间以自学 + AI 协作为主推进技术栈（Python 后端、数据库、本地知识库），并独立完成上述软著与开源项目。学校、专业与毕业年份可按投递岗位补充。',
     },
   ] as TimelineItem[],
 
   /* ── 技能矩阵 ─────────────────────────────────────────────────────── */
   /** 建议 4 组、每组 4–7 项，只写"能上手交付"的，不要罗列听过的东西。 */
   capabilities: [
-    { group: '前端', items: ['React', 'TypeScript', 'Vite', 'Lit / Web Components', 'CSS 架构', 'Material 3'] },
-    { group: '后端', items: ['Python', 'Node.js', 'REST API', 'SQL', '并发与异步'] },
-    { group: '工程化', items: ['Git', 'PyInstaller', 'PowerShell 脚本', 'CI/CD', '性能剖析'] },
-    { group: '桌面 / 客户端', items: ['pywebview', 'WebView2', '本地服务与 IPC'] },
+    {
+      group: 'Python 后端',
+      items: ['Python', 'Django', 'MySQL', 'REST / 内嵌 HTTP 服务', '多线程 / 异步编程'],
+    },
+    {
+      group: 'AI 应用开发',
+      items: [
+        'AI 协作开发',
+        'Prompt 与需求拆解',
+        '代码审查与排错',
+        '技术选型调研',
+        'OpenAI API',
+      ],
+    },
+    {
+      group: '本地知识库 / RAG',
+      items: [
+        'ChromaDB',
+        'Embedding 与语义分块',
+        '检索增强生成',
+        'tiktoken',
+        'python-dotenv',
+      ],
+    },
+    {
+      group: '数据与爬虫',
+      items: ['aiohttp', 'BeautifulSoup4', 'trafilatura', 'SimHash 去重', 'Playwright'],
+    },
+    {
+      group: '工程与交付',
+      items: [
+        'Git / GitHub',
+        'Lit / TypeScript / Vite',
+        'pywebview · Edge WebView2',
+        'PyInstaller 单文件打包',
+        'PowerShell 安装 / 卸载脚本',
+      ],
+    },
+    {
+      group: '算法基础',
+      items: ['DFS / BFS / A* / MCTS', '反向传播手写实现', 'MC Dropout 不确定性'],
+    },
   ] as Capability[],
 }
 

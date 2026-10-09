@@ -30,6 +30,28 @@ export default function Nav() {
   // 吸顶状态 + 阅读进度：都用 rAF 节流，进度直接写 DOM，不引发重渲染
   useEffect(() => {
     let frame = 0
+    /* 可滚动总高度只在挂载与文档尺寸变化时量一次。
+       ⚠️ 不要每帧读 `documentElement.scrollHeight`：它会让浏览器**当场重算
+       布局**（scrollHeight 依赖整棵文档的布局），而同一个滚动帧里立方体刚
+       写完 9 个面的 transform —— 于是每个滚动帧都白白多一次整文档重排。
+       用 ResizeObserver 盯住文档根，尺寸真的变了才重量（它本来就会在
+       图片撑开、字体替换、窗口缩放时触发）。 */
+    let maxScroll = Math.max(
+      0,
+      document.documentElement.scrollHeight - window.innerHeight,
+    )
+
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+
+    const measure = () => {
+      maxScroll = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      )
+      onScroll()
+    }
 
     const update = () => {
       frame = 0
@@ -43,24 +65,26 @@ export default function Nav() {
         setStuck(nextStuck)
       }
 
-      const max = document.documentElement.scrollHeight - window.innerHeight
-      const ratio = max > 0 ? Math.min(1, Math.max(0, y / max)) : 0
+      const ratio = maxScroll > 0 ? Math.min(1, Math.max(0, y / maxScroll)) : 0
       if (progressRef.current) {
         progressRef.current.style.transform = `scaleX(${ratio})`
       }
     }
 
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update)
-    }
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(measure)
 
     update()
+    resizeObserver?.observe(document.documentElement)
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
+    window.addEventListener('resize', measure)
     return () => {
       if (frame) cancelAnimationFrame(frame)
+      resizeObserver?.disconnect()
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('resize', measure)
     }
   }, [])
 

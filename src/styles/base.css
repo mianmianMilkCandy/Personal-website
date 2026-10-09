@@ -10,7 +10,14 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /* ⚠️ 这里**故意不写 `scroll-behavior: smooth`**（2026-10-09 移除）。
+     它在文档根上会给"所有"滚动都套一层浏览器动画：鼠标滚轮的每一格都变成
+     一段缓动追赶，滚起来像隔了一层棉花 —— 这是本站观感上"卡顿"最直接的来源
+     之一（而且它还是会与 `lib/cube.ts` 的滚动驱动叠加：立方体的旋转角读的是
+     window.scrollY，被缓动拖住时角度跟不上指针）。
+     平滑滚动只保留给**锚点跳转**这一种场景，由 `lib/smoothAnchors.ts` 在
+     点击时显式调用 `scrollIntoView({ behavior: 'smooth' })`。
+     用户若在系统里开了"减少动态效果"，那个模块会自己退化成瞬时跳转。 */
   /* 锚点定位补偿固定导航高度 */
   scroll-padding-top: var(--nav-h);
 }
@@ -47,7 +54,10 @@ body {
   font-feature-settings: 'ss01' 1, 'cv05' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  /* ⚠️ 这里**故意不写 `text-rendering: optimizeLegibility`**（2026-10-09 移除）。
+     它会让浏览器对**每一个**文本节点都强制算一遍字距调整与连字，中文长文本
+     尤其贵；本站正文密度高、又整体处在滚动/翻面的合成循环里，这笔开销换来的
+     观感差异肉眼不可见。默认的 `auto` 已经会正常做 kerning。 */
   overflow-x: hidden;
 }
 
@@ -419,7 +429,10 @@ button {
 }
 
 /* 手绘高透明度按钮：底色与手绘描边在文件末尾那一节成组定义（与 .btn--ghost 共用）。
-   这里只保留"玻璃模糊"这一件属于胶囊自己的事。 */
+   这里只保留"玻璃模糊"这一件属于胶囊自己的事。
+
+   ⚠️ 这个 blur 在**立方体的面里**会被性能策略关掉（见 base.css 文件末尾那一节），
+   原因写在 Cube.css 的"面内不做 backdrop-filter"注释里。 */
 .pill--quiet {
   color: var(--fg);
   backdrop-filter: blur(10px);

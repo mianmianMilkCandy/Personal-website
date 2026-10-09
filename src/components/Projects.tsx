@@ -46,23 +46,25 @@ function Card({ project, index }: { project: Project; index: number }) {
       </div>
 
       {/* 视觉带：画作裁切件打底 + 项目色调薄膜 + 网格 + 描边大字。
-          画作让每张卡有真实质感，薄膜保证标题在任何画面上都读得清。 */}
+          画作让每张卡有真实质感，薄膜保证标题在任何画面上都读得清。
+          `.project__visual-wipe` 这层是**动画层**：进场从左往右擦开的动作
+          放在它身上（transform，纯合成），而裁切（clip-path / overflow）
+          留在静态的 `.project__visual` 上 —— 见 Projects.css 里那一节的说明。 */}
       <div className="project__visual" style={tone} aria-hidden="true">
-        {project.art ? (
-          <img
-            className="project__art"
-            src={asset(`media/${project.art}`)}
-            alt=""
-            loading="lazy"
-            decoding="async"
-          />
-        ) : null}
-        <span className="project__visual-veil" />
-        <span className="project__visual-grid" />
-        <span className="project__visual-name">{project.nameEn}</span>
-        {project.placeholder ? (
-          <span className="project__badge mono">占位内容 · 待替换</span>
-        ) : null}
+        <div className="project__visual-wipe">
+          {project.art ? (
+            <img
+              className="project__art"
+              src={asset(`media/${project.art}`)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          ) : null}
+          <span className="project__visual-veil" />
+          <span className="project__visual-grid" />
+          <span className="project__visual-name">{project.nameEn}</span>
+        </div>
       </div>
 
       <div className="project__body">
@@ -152,21 +154,67 @@ function Card({ project, index }: { project: Project; index: number }) {
 }
 
 /**
- * 项目区拆成三个面（见 App.tsx 的面表）：一个项目一个面。
- * 三个面共用同一张画，标题行只出现在第一面。
+ * 项目区拆成「索引面 + 一面一个项目」（见 App.tsx 的面表）。
+ *
+ * 为什么要有索引面：项目卡在本机实测量出来是 **≈ 1080px 高**（抬头 + 视觉带
+ * + 六条要点 + 指标 + 技术栈），而面高 = 100svh（常见 900px）且 `.cube__slot`
+ * 是 `overflow: hidden` —— 卡放不下就会被从底部硬切，最后几条要点与技术栈
+ * 直接看不见。所以：
+ *   · 索引面只放抬头 + 每张卡的名字与一年范围，永远装得进一屏；
+ *   · 详情面一屏只放一张卡，卡内的要点数量由数据侧控制（3–5 条）。
+ * 两处共用同一张 `--sec-art`，所以从索引滑到详情画不换，只是一次翻面。
  */
-export type ProjectsPart = 'first' | 'second' | 'third'
+type ProjectId = 'clean' | 'dca'
+
+export type ProjectsPart = 'index' | ProjectId
+
+/** 面的 id 后缀（= 锚点 `#work-<id>`）与 projects.ts 下标的唯一对应关系。
+ *  App.tsx 的 FACES 也用它生成，所以新增项目只改 projects.ts + 这里一行。 */
+export const PROJECT_FACES: { id: ProjectId; index: number }[] = [
+  { id: 'clean', index: 0 },
+  { id: 'dca', index: 1 },
+]
+
+function Index() {
+  return (
+    <Face>
+      <SectionHead idx="03" title="精选项目" note="Selected Work" icon="spark" />
+
+      <ol className="projects__index">
+        {PROJECT_FACES.map((face, i) => {
+          const project = projects[face.index]
+          if (!project) return null
+          return (
+            <Reveal
+              as="li"
+              className="projects__index-row"
+              key={face.id}
+              delay={stagger(i, 90)}
+            >
+              <a href={`#work-${face.id}`}>
+                <span className="projects__index-no mono">{project.index}</span>
+                <span className="projects__index-name">{project.name}</span>
+                <span className="projects__index-en mono">{project.nameEn}</span>
+                <span className="projects__index-period mono">{project.period}</span>
+                <Icon name="arrowDown" className="projects__index-arrow" />
+              </a>
+            </Reveal>
+          )
+        })}
+      </ol>
+    </Face>
+  )
+}
 
 export default function Projects({ part }: { part: ProjectsPart }) {
-  const index = part === 'first' ? 0 : part === 'second' ? 1 : 2
+  if (part === 'index') return <Index />
+
+  const index = PROJECT_FACES.find((face) => face.id === part)?.index ?? -1
   const project = projects[index]
   if (!project) return null
 
   return (
     <Face>
-      {part === 'first' ? (
-        <SectionHead idx="03" title="精选项目" note="Selected Work" icon="spark" />
-      ) : null}
       <ol className="projects__list projects__list--solo">
         <Card project={project} index={index} />
       </ol>

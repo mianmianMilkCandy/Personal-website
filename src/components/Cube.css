@@ -47,11 +47,72 @@
   overflow: hidden;
   transform-origin: 50% 50%;
   /* 面内是"一屏"，区块级的超大留白要压下来，内容才装得进 100svh。
-     只压大档间距，小间距保持原样（贴纸、标签的节奏感不丢）。 */
-  --sp-10: 4.5rem;
-  --sp-9: 3rem;
-  --sp-8: 2.75rem;
-  --sp-7: 2rem;
+     只压大档间距，小间距保持原样（贴纸、标签的节奏感不丢）。
+     下面这四个值比令牌默认值更紧，依据见本节末尾那组实测数据。 */
+  --sp-10: 3rem;
+  --sp-9: 2.25rem;
+  --sp-8: 2.25rem;
+  --sp-7: 1.75rem;
+}
+
+/* ── 一屏装不下 = 内容被静默切掉（实测数据在下面）─────────────────────────
+   这一节是**量出来的**，不是估的。面高恰好 100svh、`.cube__slot` 又是
+   `overflow: hidden`，所以只要内容比一屏高，多出来的部分就被从底部硬切、
+   控制台一条错都不报。用 `_repo/perf/overflow.mjs` 逐面实测量到的溢出量
+   （1600×900 视口，数字 = 最深的那个元素下沿越过面下沿多少 px）：
+
+     面（face）        原始    只压留白    压留白 + 压卡片
+     about-story        36        0            0
+     work-clean         27        0            0
+     work-dca           60       16            0
+     contact            16       16           16 → 落定后 0（见下面的注）
+
+   所以两套都得用：只压留白的话，要点最多的那张项目卡仍然差 16px。
+   ⚠️ 上面 contact 的 16 是**假读数**：页脚没包 Reveal，在"非当前面"上处于
+   退场位姿（`translateY(16px)`）。滚到那一面、等过渡走完再量就是 0。
+   量面内几何一定要"滚过去再量"，静止在首屏测出来的数字不可信。
+
+   代价说明：这套只动留白与卡片内边距，**没有**改任何字号、行高或文案。
+   唯一动到视觉的是项目卡视觉带 230 → 196px（一张卡少 34px 画作高度），
+   这是把 work-dca 从 16px 溢出压到 0 的必要代价。 */
+.cube__slot .section {
+  padding-block: 2.25rem;
+}
+
+.cube__slot .timeline__item {
+  padding-block: 1rem;
+}
+
+.cube__slot .project__visual {
+  min-height: 196px;
+}
+
+.cube__slot .project__body {
+  padding: 1.5rem;
+}
+
+.cube__slot .closing__inner {
+  padding-block: 1.5rem;
+}
+
+.cube__slot .closing__eyebrow {
+  margin-bottom: 0.9rem;
+}
+
+.cube__slot .closing__lead {
+  margin-top: 1rem;
+}
+
+.cube__slot .closing__actions {
+  margin-top: 1.25rem;
+}
+
+.cube__slot .closing__socials {
+  margin-top: 1.25rem;
+}
+
+.cube__slot .closing__foot-inner {
+  min-height: 52px;
 }
 
 /* 假光照：颜色走令牌（dusk 近黑 / day 暖棕），深浅由驱动的 --shade 控制 */
@@ -96,6 +157,31 @@
    相机在棱柱轴上，背对的面会被从内侧看到，也就是镜像的正文。 */
 .cube__slot[data-parked] {
   visibility: hidden;
+}
+
+/* ── 面内一律不做 backdrop-filter（性能硬纪律）─────────────────────────────
+   面是**一直在转**的：一个带 backdrop-filter 的元素在转动的面上，等于要求
+   合成器每一帧都重新采样它背后的整片内容并重做一次高斯模糊 —— 模糊半径越
+   大越贵（这里 10–18px），而且它会把这一层从"可复用的栅格缓存"里踢出去，
+   整面内容每帧重栅格化。这是全站最贵的两件事之一（另一件是逐帧改
+   transform 的重图层）。
+
+   所以：**玻璃质感只保留在不转的地方** —— 固定导航（Nav.css 的 .nav.is-stuck）
+   与入场幕屏（EntryGate）继续模糊，因为它们在转动的舞台之外。
+
+   面内受影响的是这两处（都是设计里本来就要"高透明度、看得见画"的元素）：
+     · `.hero__card`（首屏玻璃卡，底色 28% 不透明）
+     · `.pill--quiet` / `.btn--ghost`（手绘按钮，底色 12% 不透明）
+     · `.glass` 的默认底（`.nav__cluster` / `.curtint` 也用 .glass，但它们在
+       固定导航里、不在面上，所以这里的选择器只命中面内的那一份）
+   去掉模糊之后它们仍然半透明、仍然看得见背后的画，只是不再"揉开"画面。
+   想要模糊回来：把下面这条整段删掉即可（代价就是翻面时的掉帧）。 */
+.cube__slot .hero__card,
+.cube__slot .glass,
+.cube__slot .pill--quiet,
+.cube__slot .btn--ghost {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* 面内的正文容器：垂直居中；内容比一屏高时用 safe 让溢出只发生在下边 */

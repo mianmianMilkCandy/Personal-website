@@ -11,7 +11,9 @@
      ② 可选视频（放了 media/hero-loop.mp4 才出现，能播后淡入）
      ③ CSS 兜底底
      ④ 左侧渐深的 scrim —— 让文字落在暗面
-     ⑤ veil / 暗角 / 网格 / 鼠标聚光
+     ⑤ veil / 暗角 / 网格
+
+   （2026-10-09 起删掉了原先的 ⑥ 鼠标跟随聚光：见下面 .hero__grid 之后那段注释。）
 
    这张画（台阶上的猫）左边三分之一是石阶（实测亮度 88.7），右边是亮云海
    （170.6），所以文字压左侧几乎不需要额外加暗 —— scrim 只做兜底。
@@ -102,8 +104,13 @@
   object-fit: cover;
   /* 猫在中偏左、巨云在右，取中略偏上即可两者都保住 */
   object-position: 50% 45%;
+  /* --parallax 由 Hero.tsx 直接写在**这个元素**上（不是父层）：
+     它只改自己的 transform，所以每一帧只是合成层位移；
+     若写在父层，父层的 will-change 会把这张 2000px 的图连同它的
+     filter 调色一起拉去重栅格化。
+     这里仍**不写 will-change**：`filter` 是静态值，transform 动画在既有
+     栅格上做位移即可，不需要（也不该）每帧重跑一遍卷积滤镜。 */
   transform: translate3d(0, var(--parallax, 0%), 0) scale(1.05);
-  will-change: transform;
 }
 
 /* 竖版取景已经把猫放到正中，所以这里只需要往下压一点留住台阶 */
@@ -177,21 +184,14 @@
   mask-image: radial-gradient(100% 72% at 42% 45%, #000 14%, transparent 76%);
 }
 
-.hero__spotlight {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  background: radial-gradient(
-    320px circle at var(--mx, 50%) var(--my, 50%),
-    var(--accent-glow),
-    transparent 68%
-  );
-  transition: opacity var(--dur-3) var(--ease-out);
-}
-
-.hero:hover .hero__spotlight {
-  opacity: 1;
-}
+/* 已删除：`.hero__spotlight`（鼠标跟随的暖色聚光，2026-10-09）。
+   它是 `radial-gradient(320px circle at var(--mx) var(--my))`，而把指针位置
+   写进 CSS 变量会让浏览器**整个元素重新解析渐变并重绘** —— 这一层的面积是
+   整个首屏（约 1600×900），于是每次鼠标移动都触发一次全屏区域的重绘，
+   首屏上还压着画作与四层遮罩。收益（一层很淡的暖光）远抵不上这笔开销，
+   而且是"动鼠标就掉帧"这种最容易被感知到的卡顿。
+   要恢复：在 Hero.tsx 里加回 `.hero__spotlight` 那个 div 与 pointermove
+   监听，并把这段 CSS 贴回来。 */
 
 /* ── 版式：左右两栏 + 底部一条 SCENE 行 ──────────────────────────────── */
 .hero__inner {

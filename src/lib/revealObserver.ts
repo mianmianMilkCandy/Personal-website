@@ -70,14 +70,24 @@ export function observeReveal(el: Element): () => void {
   const obs = getObserver()
   obs.observe(el)
 
-  // 首屏已经在视口里的元素，不交给观察器判入场。
-  // 原因：rootMargin 的下边距 -12% 是给"滚动才播"设计的，它把视口最下沿
-  // 那条带子排除在交叉区之外 —— 而首屏是不滚动的，落在那条带子里的元素
-  // （首屏最底边的 SCENE 小字、矮视口下的玻璃卡）会永远停在 opacity:0，
-  // 看起来就像"控件没渲染出来"。
-  //
-  // 首帧的布局还会变（字体替换、iframe 尺寸、图片撑开），所以连查几帧，
-  // 再补一次定时复查；命中任意一次就播入场，阶梯延迟照旧生效。
+  /* --------------------------------------------------------------------------
+     首屏已经在视口里的元素，不交给观察器判入场。
+     --------------------------------------------------------------------------
+     原因：rootMargin 的下边距 -12% 是给"滚动才播"设计的，它把视口最下沿
+     那条带子排除在交叉区之外 —— 而首屏是不滚动的，落在那条带子里的元素
+     （首屏最底边的 SCENE 小字、矮视口下的玻璃卡）会永远停在 opacity:0，
+     看起来就像"控件没渲染出来"。
+
+     首帧的布局还会变（字体替换、iframe 尺寸、图片撑开），所以连查几帧。
+     这里是**唯一**需要主动量几何的地方，而且是每个元素各量一次、最多量
+     3 帧，所以写成一次 getBoundingClientRect 读两个判据（原来分两次读，
+     等于把首帧的强制布局翻倍）。
+
+     ⚠️ 这里原先还挂着一个 `setTimeout(revealIfInView, 700)` 兜底 —— 那是
+     一次"睡 700ms 再统一量一遍"的轮询：它要多付一次跨帧的强制布局，
+     而它想兜住的场景（字体/图片把元素挤进视口）已经由 IntersectionObserver
+     自己的回调覆盖（观察器只在"相交状态发生变化"时回调，无论那次变化是滚动
+     引起的还是布局引起的）。已删除。 */
   let frames = 3
   const revealIfInView = () => {
     const rect = el.getBoundingClientRect()
@@ -89,10 +99,8 @@ export function observeReveal(el: Element): () => void {
     if (--frames > 0) requestAnimationFrame(revealIfInView)
   }
   requestAnimationFrame(revealIfInView)
-  const retry = window.setTimeout(revealIfInView, 700)
 
   return () => {
-    window.clearTimeout(retry)
     obs.unobserve(el)
   }
 }

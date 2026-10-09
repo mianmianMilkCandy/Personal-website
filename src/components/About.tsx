@@ -31,33 +31,38 @@ function capIcon(group: string): IconName {
   return CAP_ICON[group] ?? 'spark'
 }
 
-/** 模块级常量：内容静态，避免每次渲染重建数组 */
-const CONTACT_ROWS: ContactRow[] = [
-  {
-    key: 'email',
-    label: '邮箱',
-    value: profile.email,
-    icon: 'mail',
-    href: `mailto:${profile.email}`,
-    copy: profile.email,
-  },
-  {
-    key: 'phone',
-    label: '电话',
-    value: profile.phone,
-    icon: 'phone',
-    href: `tel:${profile.phone.replace(/[^\d+]/g, '')}`,
-    copy: profile.phone,
-  },
-  ...profile.socials.map((social) => ({
-    key: social.label,
-    label: social.label,
-    value: social.value,
-    icon: socialIcon(social.label),
-    href: social.href,
-    copy: social.copy,
-  })),
-]
+/** 模块级常量：内容静态，避免每次渲染重建数组。
+ *  `phone` 目前是空字符串（作者要求手机号不上站），下面这个 filter 会把
+ *  空行整行剔掉 —— 否则页面上会出现一行「电话 / —」的死条目。
+ *  以后填了 profile.phone，这一行会自动回来，不用改这里。 */
+const CONTACT_ROWS: ContactRow[] = (
+  [
+    {
+      key: 'email',
+      label: '邮箱',
+      value: profile.email,
+      icon: 'mail',
+      href: `mailto:${profile.email}`,
+      copy: profile.email,
+    },
+    {
+      key: 'phone',
+      label: '电话',
+      value: profile.phone,
+      icon: 'phone',
+      href: `tel:${profile.phone.replace(/[^\d+]/g, '')}`,
+      copy: profile.phone,
+    },
+    ...profile.socials.map((social) => ({
+      key: social.label,
+      label: social.label,
+      value: social.value,
+      icon: socialIcon(social.label),
+      href: social.href,
+      copy: social.copy,
+    })),
+  ] satisfies ContactRow[]
+).filter((row) => row.value.trim() !== '')
 
 const PORTRAIT_SRC = asset('media/portrait.jpg')
 

@@ -11,9 +11,11 @@
   place-items: center;
   overflow: hidden;
   background: var(--ink-1000);
+  /* 淡出时长走 --dur-gate：EntryGate.tsx 会读同一个令牌来决定"什么时候
+     把幕屏从 DOM 里卸掉"。两边共用一个值，调时长不会脱钩。 */
   transition:
-    opacity var(--dur-3) var(--ease-out),
-    visibility var(--dur-3) var(--ease-out);
+    opacity var(--dur-gate) var(--ease-out),
+    visibility var(--dur-gate) var(--ease-out);
 }
 
 .gate.is-leaving {

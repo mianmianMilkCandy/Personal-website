@@ -20,7 +20,9 @@ html.has-cursor * {
   z-index: 95;
   pointer-events: none;
   opacity: 0;
-  will-change: transform;
+  /* will-change 只放在环身上（.cur--ring），不放在这个父层：
+     父层若被提升，两个子元素会一起进同一张合成层，小圆点的阴影重绘
+     就没有意义了；而环的 box-shadow 模糊确实需要独立合成层来兜。 */
   transition: opacity var(--dur-2) var(--ease-out);
 }
 
@@ -46,6 +48,10 @@ html.has-cursor * {
   border: 1px solid color-mix(in srgb, var(--cur-color) 42%, transparent);
   border-radius: var(--r-full);
   box-shadow: 0 6px 18px var(--shadow-soft);
+  /* 每帧改 transform（缓动跟随 + 缩放）。提升到独立合成层之后，
+     `box-shadow` 的 18px 模糊不会跟着每一帧重绘 —— 这是"抬起一个环"
+     的显存代价换来的实际收益。 */
+  will-change: transform;
   transition:
     opacity var(--dur-2) var(--ease-out),
     border-color var(--dur-2) var(--ease-out),

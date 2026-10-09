@@ -64,6 +64,8 @@ export function initCube({ stage, slots }: CubeOptions): () => void {
   if (n < 2) return () => {}
 
   let frame = 0
+  /* 面高 = 舞台高 = 100svh。**只在初始化与 resize 时量**，不在滚动帧里量 ——
+     理由见 update() 里那段注释（读写交替会迫使每帧重算布局）。 */
   let h = stage.clientHeight || window.innerHeight
   let shadeMax = readShadeMax()
   let persp = readPerspective()
@@ -139,6 +141,13 @@ export function initCube({ stage, slots }: CubeOptions): () => void {
 
   function update(): void {
     frame = 0
+    /* ⚠️ 这里**不要**每帧读 `stage.clientHeight`。
+       舞台高恒等于 100svh（Cube.css 的几何硬约束），而 clientHeight 是布局
+       读数：前一行/上一帧刚写完 9 个面的 transform 与 --shade（都是失效布局的
+       样式写），紧接着读 clientHeight 就会**迫使浏览器当场重算一次布局**，
+       而这一帧马上还要再写一遍 —— 一来一回就是"读写交替"的经典卡顿模式，
+       面内又是 grid + flex 的整屏内容，重算一次不便宜。
+       高度只在 initCube 与 resize 时量一次（见 h 变量与 onResize）。 */
     const p = Math.min(n - 1, Math.max(0, window.scrollY / h))
     const k = Math.min(n - 2, Math.floor(p))
     const f = p - k

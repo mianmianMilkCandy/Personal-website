@@ -18,12 +18,24 @@ npm run preview    # 本地预览构建产物
 
 ## 页面结构
 
-| 序号 | 区块 | 锚点 | 说明 |
-| --- | --- | --- | --- |
-| 01 | 首屏 Hero | `#hero` | 四角构图：左上字标 / 右上光标配色+玻璃控件簇 / 左下大标题+手绘按钮 / 右下玻璃卡（WELCOME）/ 底边 SCENE 行 |
-| 02 | 关于我 | `#about` | 人物介绍、联系方式、经历时间线、能力矩阵 |
-| 03 | 精选项目 | `#projects` | 大卡片，每张含视觉带 / 正文 / 指标 / 技术栈 |
-| 04 | 收尾页 | `#contact` | 整屏留白收尾，只留「发邮件」一个动作 |
+整站是**一根棱柱的 9 个侧面**（面表在 `src/App.tsx` 的 `FACES`，面数由数组长度决定）：
+
+| 面 id（= 锚点） | 区块 | 说明 |
+| --- | --- | --- |
+| `#hero` | 首屏 | 整屏四角构图：左上字标 / 右上光标配色+玻璃控件簇 / 左下大标题+手绘按钮 / 右下玻璃卡（WELCOME）/ 底边 SCENE 行 |
+| `#about` | 关于我 · 概览 | 四张能力贴纸 + 自述三段 |
+| `#about-contact` | 关于我 · 联系 | 头像（缺失时显示「云」）+ 邮箱 / GitHub / 微信三行（手机号按作者要求不上站） |
+| `#about-story` | 关于我 · 经历 | 时间线：两个项目 + 两项软件著作权 + 在读本科 |
+| `#about-caps` | 关于我 · 能力 | 六组技能矩阵 |
+| `#projects` | 精选项目 · 目录 | 索引面：列出每个项目（编号 / 名称 / 周期），点击落到对应详情面 |
+| `#work-clean` | 项目一 · clean | C 盘清理工具（大卡片：视觉带 / 正文 / 指标 / 技术栈） |
+| `#work-dca` | 项目二 · DeepCognitiveAgent | AI 学习与推理项目集 |
+| `#contact` | 收尾页 | 整屏留白收尾，只留「发邮件」一个动作 |
+
+> **为什么项目区要单独有一个"目录面"**：一张项目详情卡实测约 1080px 高，
+> 而面高恰好一屏（常见 900px）且面是 `overflow: hidden` —— 两张卡塞进同一面
+> 会被从底部硬切。所以一面只放一张卡，动手前先读 `Cube.css` 里
+> 「一屏装不下 = 内容被静默切掉」那一节的实测数字。
 
 ## 目录结构
 
@@ -53,6 +65,8 @@ npm run preview    # 本地预览构建产物
     ├── lib/
     │   ├── asset.ts        资源路径拼装（asset / assetUrl 的区别见文件注释）
     │   ├── clickShine.ts   按钮点击光影（文档级事件委托）
+    │   ├── smoothAnchors.ts 平滑滚动只给锚点跳转（滚轮保持原生瞬时）
+    │   ├── cube.ts         立方体舞台驱动：滚动 → 旋转角 + 面内相位
     │   ├── sectionArt.ts   区块背景画 → --sec-art
     │   ├── stagger.ts      阶梯延迟（必须封顶，否则后面的元素像卡住）
     │   └── revealObserver.ts  全站共用的单一 IntersectionObserver
@@ -63,6 +77,7 @@ npm run preview    # 本地预览构建产物
     │   ├── useCursorColor.ts    光标配色（同上）
     │   └── useCopy.ts           复制到剪贴板 + 反馈
     └── components/         每个组件自带同名 .css
+        ├── Cube              立方体舞台（track 提供滚动距离 + fixed 舞台 + 9 个面）
         ├── Nav / Hero / About / Projects / Closing
         ├── LocalClock        秒级时钟的叶子节点（防止首屏每秒重渲染）
         ├── DynamicCursor     动态光标（收敛后主动停 rAF）
@@ -82,19 +97,25 @@ npm run preview    # 本地预览构建产物
 | --- | --- | --- |
 | 姓名、英文名、职位、一句话定位 | **`src/data/profile.ts`** | `name` / `nameEn` / `role` / `roleEn` / `tagline` |
 | 首屏大标题、专注领域、所在城市 | 同上 | `heroGreeting`（当前未使用）/ `focus` / `location` |
-| 邮箱、电话、GitHub / 微信 / 博客 | 同上 | `email` / `phone` / `socials[]` |
+| 邮箱、电话、GitHub / 微信 | 同上 | `email` / `phone` / `socials[]` |
 | 简历 PDF 下载按钮 | 同上 | `resumeUrl`（把 PDF 丢进 `public/`，填 `'./resume.pdf'`；留空则按钮不出现） |
 | 「关于我」正文（2–3 段） | 同上 | `bio[]` |
 | 工作 / 项目经历时间线 | 同上 | `timeline[]`（`period` / `org` / `role` / `detail`） |
 | 技能矩阵（能力 / Capabilities） | 同上 | `capabilities[]`（`group` + `items[]`） |
-| 精选项目卡片（含要点、指标、技术栈、链接） | **`src/data/projects.ts`** | `projects[]`；`placeholder: true` 是"占位内容·待替换"徽标的开关，填完删掉该行 |
-| 头像照片 | 不用改代码 | 把图片存成 `public/media/portrait.jpg` 即自动生效，失败时回落到 `portraitFallback` 字母 |
+| 精选项目卡片（含要点、指标、技术栈、链接） | **`src/data/projects.ts`** | `projects[]`，同时要在 `src/components/Projects.tsx` 的 `PROJECT_FACES` 里补一行（面 id ↔ 数组下标），`App.tsx` 的 `FACES` 会自动展开 |
+| 头像照片 | 不用改代码 | 把图片存成 `public/media/portrait.jpg` 即自动生效，失败时回落到 `portraitFallback` 字母（现为「云」） |
 
-工作区里的 `个人简介.txt` 是空文件，所以当前所有个人字段都是占位符。
+**当前资料状态**：真实信息已全部填入（云绵绵甜奶糖的简历）。仍留白的三项都带自动回落：
 
-开发模式下左下角会有一个「占位内容 N 项」的提示条，点开就是待填清单；
-每填完一项，就把 `profile.ts` 顶部 `UNFILLED` 数组里对应的那行删掉，
-清空后提示条自动消失（生产构建里本就不存在）。
+- **手机号** —— 按作者要求**不上站**。`profile.phone` 是空字符串，关于区那行会被
+  `About.tsx` 里的 `.filter()` 整行剔掉，所以页面上不会出现「电话 / —」的死条目；
+  哪天想放上去，填上 `profile.phone` 那一行就自动回来。
+- **头像** —— 缺 `public/media/portrait.jpg` 时显示「云」字，并有一条 404（这是
+  "丢进文件即生效"的探测机制，刻意保留）。
+- **简历 PDF** —— `resumeUrl` 留空，按钮不渲染。
+
+开发模式下左下角的「占位内容 N 项」提示条现在只剩 1 项（头像），源于
+`profile.ts` 顶部的 `UNFILLED` 数组。
 
 素材只需按文件名丢进 `public/media/`，**不用改代码**：
 
@@ -107,7 +128,8 @@ npm run preview    # 本地预览构建产物
 | `sec-about.webp` | 「关于我」区块背后的画（回廊·横） | 1000px · 81 KB |
 | `sec-projects.webp` | 「精选项目」区块背后的画（回廊·竖） | 800px · 142 KB |
 | `sec-closing.webp` | 收尾页背后的画（临海石台·竖，回廊尽头看海） | 800px · 95 KB |
-| `card-01/02/03.webp` | 三张项目卡的画面 | 900×506 · 50 / 88 / 63 KB（惰性加载） |
+| `card-01/02.webp` | 两张项目卡的画面（分别对应 clean 与 DeepCognitiveAgent） | 900×506 · 50 / 88 KB（惰性加载） |
+| `card-03.webp` | **已不再引用**（原第三张占位卡已删除）；文件留着备用，删除安全 | 900×506 · 63 KB |
 | `portrait.jpg` | 关于区块头像 | ⬜ 待补 · 4:5 竖构图，≥ 900×1125 |
 | `hero-loop.mp4` | 首屏背景**视频**（可选增强） | ⬜ 可选 · 1920×1080，8–15 秒循环，**≤ 4 MB** |
 
@@ -282,12 +304,26 @@ ffmpeg -i input.mp4 -t 12 -an \
 | --- | --- |
 | 首屏 `#hero` | 台阶上的猫（横/竖两版，按视口切换）—— 原图 7 |
 | 关于我（4 面）`#about` | 回廊（横）—— 原图 5 |
-| 精选项目（3 面）`#projects` | 回廊（竖）—— 原图 6 |
+| 项目目录 + 两个项目（3 面）`#projects` | 回廊（竖）—— 原图 6 |
 | 收尾 `#contact` | 临海石台（竖）—— 原图 4 |
 
 原图副本在 `_repo/img/src/`（已 gitignore），派生脚本是 `_repo/img/prep3.py`：
 **换图 → 把新图丢进 `_repo/img/src/` 并改脚本顶部的 `SRC` → 重跑**，
 不要手改 `public/media/` 里的派生文件。图 1（横版临海石台）保留在脚本里作备用。
+
+### 两条面内硬纪律（都踩过，别再犯）
+
+**① 面内一律不做 `backdrop-filter`。** 面一直在转，带模糊的元素等于要求合成器
+每一帧重新采样它背后的整片内容并重做高斯模糊，还会把这一层踢出栅格缓存。
+所以玻璃质感只留在**不转的地方**：固定导航（`.nav.is-stuck`）与入场幕屏。
+面内的 `.hero__card` / `.pill--quiet` / `.btn--ghost` / `.glass` 由 `Cube.css` 里
+那一条统一关掉模糊。想要模糊回来就删掉那一条，代价是翻面掉帧。
+
+**② 面内内容必须一屏装得下，而"装不下"不会报错。** `.cube__slot` 是
+`overflow: hidden`，超出的部分被静默从底部切掉。`Cube.css` 里那组压过的
+`--sp-*` 与 `.timeline__item` / `.project__visual` / `.closing__*` 的间距，
+是 `_repo/perf/overflow.mjs` **逐面量出来的**（原始溢出 36 / 27 / 60 / 16 px
+→ 现在全部 0）。加内容之后请重跑那个脚本，不要凭肉眼判断。
 
 > `Seam.tsx` / `--seam-*` 令牌**保留但已不被引用**：它们是"关掉 3D"时的降级落点
 > （棱柱承担过渡之后，折痕就没有存在的理由了）。下面这一段仍然成立，供降级时使用。
@@ -353,7 +389,6 @@ ffmpeg -i input.mp4 -t 12 -an \
 
 > **2026-10-09 起，动画是"每次换面都重播一遍"的进出场，不再是"只播一次的入场"。**
 > 页面在这里就是立方体的面（`App.tsx` 的 `FACES`），所以"页面变动" = 面的转进与转出。
-
 **一、面内内容的相位由立方体驱动（这是主路径）**
 
 `src/lib/cube.ts` 每个滚动帧推导一次，把结果写在**槽位**上：
@@ -387,7 +422,7 @@ ffmpeg -i input.mp4 -t 12 -an \
 | --- | --- | --- |
 | 首屏画 `.hero__media`（`Hero.css`） | `animation: heroCurtain`：从 35% 亮度 + 推近 → 全亮归位，延迟 100ms | 压回 35% + 推近（**不淡到 0**） |
 | 卡片抬头 `.project__head` | 从上方 8px 落下，延迟 60ms | 退回 |
-| 卡片视觉带 `.project__visual` | `clip-path` 从左往右擦开 | 反向擦掉 |
+| 卡片视觉带 `.project__visual-wipe` | `transform: scaleX(0 → 1)`（外层静态裁切）从左往右擦开 | 反向擦掉 |
 | 收尾页脚 `.closing__foot` | 上浮 16px，延迟 260ms | 退回 |
 
 - 首屏画**故意用 `animation` 而不是 `transition`**：要能重播（类名每次重新匹配都会
@@ -403,6 +438,13 @@ ffmpeg -i input.mp4 -t 12 -an \
 而且**两个方向都管**：进视口加 `is-in`、离开视口摘掉 `is-in` 并挂 `is-out`
 （`base.css` 的 `.reveal.is-out` 把出场换成 320ms + 不排队）。
 立方体里的元素直接跳过观察器（交给上面的槽位相位）。
+
+> **这里原先还挂着一个 `setTimeout(revealIfInView, 700)` 兜底，2026-10-09 已删除。**
+> 它是一次"睡 700ms 再统一量一遍"的轮询：每个元素都要多付一次跨帧的强制布局，
+> 而它想兜住的场景（字体/图片把元素挤进视口）本来就由 IntersectionObserver
+> 自己的回调覆盖 —— 观察器只在"相交状态变化"时回调，布局变化引起的也算。
+> 首屏那批元素仍由挂载时的 3 帧几何检查处理（每个元素一次 `getBoundingClientRect`，
+> 同时读上下两个判据，不分两次读）。
 
 > `is-out` 是**独立一个类**，不要图省事写成 `.reveal:not(.is-in)` —— 立方体里的
 > `.reveal` 从来没有 `is-in`（相位挂在槽位上），`not(.is-in)` 会把五十多个元素的
@@ -464,20 +506,53 @@ ffmpeg -i input.mp4 -t 12 -an \
 
 ## 无障碍与性能
 
-- 全部入场动效只做 `opacity` + `translateY`，并遵循 `prefers-reduced-motion: reduce`
-  （该设置下直接显示，不注册观察器）。
+- 全部入场动效只做 `opacity` + `translateY` / `scale`，并遵循 `prefers-reduced-motion: reduce`
+  （该设置下直接显示，不注册观察器，锚点跳转也不做缓动）。
 - 键盘可用：跳转主内容链接、`:focus-visible` 强调色焦点环、复制按钮带 `aria-label`、
   导航当前项带 `aria-current`。
-- 滚动监听全部用 rAF 节流，进度条与聚光直接写 DOM 属性，不触发逐帧重渲染。
+- 滚动监听全部用 rAF 节流，进度条与视差直接写 DOM 属性，不触发逐帧重渲染。
 - 项目卡的视觉带与首屏降级底仍是纯 CSS 生成；全站**只有首屏那一张背景图**是图片请求
   （WebP 优先 + JPEG 兜底 + `rel=preload`），且视频是可选增强。全站无第三方 JS。
-- **不得引入常驻动画循环**。秒级时钟是独立叶子组件
-  （`src/components/LocalClock.tsx`），动态光标在"环追上点、缩放收敛"之后
-  **会主动停掉 rAF**（`DynamicCursor.tsx` 里 `render()` 的返回值决定是否续帧）。
-  这两处曾经是全站仅有的持续开销：首屏每秒整棵重渲染 + 每秒 120 次空转 rAF。
-  改这两个文件时请保持"没有变化就不写 DOM、没有位移就停帧"的写法。
-- **实测数据与评分见 [PERF-REVIEW.md](PERF-REVIEW.md)**：真实 Chrome 下的
-  FCP/LCP/CLS/长帧归因/滚动帧间隔，以及逐元素几何对账（证明排版未变）。
+
+### 六条性能硬纪律（2026-10-09 第三轮定下）
+
+1. **不得引入常驻动画循环。** 秒级时钟是独立叶子组件（`LocalClock.tsx`）；
+   动态光标在"环追上点、缩放收敛"之后**会主动停掉 rAF**（`render()` 的返回值决定
+   是否续帧）。判据：空闲 1 秒内**页面自己**申请的 rAF 应为 **0** 次（实测 0，
+   改之前是 121 次/秒）。
+   > ⚠️ 收敛判据里**不能写 `rx !== px` 这种严格比较**：缓动是浮点乘法，永远不会
+   > 正好落在整数坐标上，循环就永远停不下来。必须带容差（`SNAP_EPSILON`）。
+2. **不要在文档根上写 `scroll-behavior: smooth`。** 它会给鼠标滚轮的每一格都套一层
+   缓动追赶，还会和 `lib/cube.ts` 的滚动驱动打架（旋转角读 `window.scrollY`，
+   被缓动拖住时角度跟不上指针）。平滑滚动只留给锚点跳转 —— `lib/smoothAnchors.ts`
+   用文档级委托在点击 `href="#…"` 时显式 `scrollIntoView({behavior:'smooth'})`。
+3. **不要在滚动帧里读布局。** `lib/cube.ts` 不每帧读 `stage.clientHeight`、
+   `Nav.tsx` 不每帧读 `documentElement.scrollHeight`（两者的值都缓存起来，
+   只在 resize / ResizeObserver 回调里重量）。"写完样式马上读几何"会让浏览器
+   当场重算整篇布局，每个滚动帧白付一次。
+4. **面内不做 `backdrop-filter`**（理由与范围见 `Cube.css`）；**不要 `transition`
+   那些会引起重绘的属性**：`backdrop-filter` / `box-shadow` / `letter-spacing` /
+   `clip-path` / `width`。要"擦开"就用静态裁切 + `transform: scaleX`
+   （`.project__visual-wipe` 就是这么改的）。
+5. **不做"每帧重画一整层"的效果**。原先的鼠标跟随聚光
+   （`.hero__spotlight`：全屏 `radial-gradient` + 每帧改 `--mx/--my`）与首屏视差
+   都踩在这条上 —— 前者已删除，后者改成把 `--parallax` 写在 `<img>` 自己身上
+   （只动它自己的合成层，不牵连父层与 2000px 大图的重栅格化）。
+6. **面内内容必须一屏装得下**，而"装不下"是静默切掉（见上文那两条硬纪律）。
+
+### 实测工具（都在 `_repo/perf/`，已 gitignore，仅本地）
+
+| 脚本 | 回答什么问题 |
+| --- | --- |
+| `audit.mjs` | 空闲 rAF 归因 / 逐面滚动帧预算（p50·p95·max·>32ms 帧数，并归因到"跨面瞬间"还是"静止期"）/ 悬停帧率 / 长任务 / 控制台错误 / **交互自测**（面表、锚点、主题切换、内容渲染、占位徽标） |
+| `overflow.mjs` | 哪一面被 `overflow: hidden` 切掉了什么（`--try` 可先在真实页面里试候选 CSS 再改源码，`--settle` 逐面滚过去等动画落定后测，避免读到退场位姿的假溢出） |
+
+两者都是"Node 内置 http 服务 + 无头 Chrome + CDP"，无第三方依赖，需要放宽沙箱权限
+（理由同"已知环境问题"）。结果写 `.shots/*.json`，不落进项目。
+
+- **实测数据与评分见 [PERF-REVIEW.md](PERF-REVIEW.md)**（第二轮：FCP/LCP/CLS/长帧归因/
+  逐元素几何对账）与 **[PERF-REVIEW-v2.md](PERF-REVIEW-v2.md)**（第三轮：立方体时代的
+  空转 rAF、逐面内容裁切、滚动帧预算与已排除的误差来源）。
   测量夹具在 `_repo/perf/measure.mjs`（已 gitignore，仅本地）。
 
 ## 安全响应头与 CSP
@@ -553,9 +628,12 @@ tsc -b                       失败 → 退出，dist 未动
   重点是"处理失败且无法回退"这一类缺陷。
 - **[PERF-REVIEW.md](PERF-REVIEW.md)** —— 第二轮：代码审查 + 性能实测 + 整体评分
   （安全 / 性能 / 排版三项分项与加权口径），含"排版是否被改动"的逐元素几何对账。
+- **[PERF-REVIEW-v2.md](PERF-REVIEW-v2.md)** —— 第三轮（立方体舞台之后）：真实资料
+  入站、占位卡清理、空转 rAF 归因、**逐面内容裁切实测与修复**、滚动帧预算，
+  以及明确排除的误差来源（无头软件光栅 / 合成器降频）。
 - **[UI-REVIEW.md](UI-REVIEW.md)** —— 视觉层审查与截图核对。
 
-三份都明确标注了**未审 / 未验证范围**，不把"没测"写成"没问题"。
+四份都明确标注了**未审 / 未验证范围**，不把"没测"写成"没问题"。
 
 ## 部署
 
