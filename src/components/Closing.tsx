@@ -5,6 +5,7 @@ import { useCopy } from '../hooks/useCopy'
 import ArtSky from './ArtSky'
 import Icon, { socialIcon } from './Icon'
 import Reveal from './Reveal'
+import WindLeaves from './WindLeaves'
 import './Closing.css'
 
 /**
@@ -33,6 +34,10 @@ export default function Closing() {
       <ArtSky />
 
       <div className="closing__glow" aria-hidden="true" />
+
+      {/* 风里的落叶：与首屏同一处置 —— 放在**氛围层之后**，否则会被压暗到看不见。
+          理由见 WindLeaves.tsx / Hero.tsx 的注释。 */}
+      <WindLeaves />
 
       <div className="closing__inner">
         <Reveal>

@@ -1,0 +1,84 @@
+/* ============================================================================
+   WindLeaves · 风里的落叶
+   ----------------------------------------------------------------------------
+   为什么是"加新内容"而不是"让画里的藤蔓摆"，见 WindLeaves.tsx 顶部说明。
+
+   两条硬要求都靠 CSS 满足：
+     · 只动 transform / opacity → 全程合成器，不重排不重绘、不注册 rAF；
+     · 位移用 vw/vh（transform 的百分比是相对元素自身尺寸的，13px 的叶子写 110%
+       只走 14px，跨不了屏）。
+   外层负责"飞"（横穿视口），内层负责"翻"（自转 + 压扁，做出叶片翻面的感觉）。
+   ========================================================================== */
+
+.wind {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wind__leaf {
+  position: absolute;
+  top: var(--leaf-top);
+  left: 0;
+  width: var(--leaf-size);
+  height: calc(var(--leaf-size) * 1.4);
+  opacity: var(--leaf-o);
+  animation: leafFlight var(--leaf-dur) linear var(--leaf-delay) infinite;
+  /* 每片叶子是一个常年动的小合成层（十几像素，代价极低） */
+  will-change: transform;
+}
+
+.wind__leaf--b {
+  animation-name: leafFlightB;
+}
+
+/* 叶片本体：对角圆角的方块就是"叶子"的轮廓，不引图片。
+   颜色用强调色（黄昏金）而不是 --fg：奶油白在亮云上等于看不见（实测过），
+   而暖金在**亮云**与**深色石墙**两种背景上都读得出来，也贴本站的"黄昏"基调。
+   尺寸/朝向靠内层的自转与压扁变化，不做逐片不同形状。 */
+.wind__leaf-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0 100% 0 100%;
+  background: var(--accent);
+  animation: leafFlutter calc(var(--leaf-dur) / 5) var(--ease-in-out) infinite alternate;
+}
+
+/* 两条飞行轨迹：都是"右→左"的斜线（风只有一个方向），只是落差不同。
+   起点与终点都在视口外，所以 infinite 循环时"瞬移回起点"看不见。 */
+@keyframes leafFlight {
+  from {
+    transform: translate3d(104vw, -8vh, 0);
+  }
+  to {
+    transform: translate3d(-14vw, 36vh, 0);
+  }
+}
+
+@keyframes leafFlightB {
+  from {
+    transform: translate3d(104vw, 10vh, 0);
+  }
+  to {
+    transform: translate3d(-14vw, -22vh, 0);
+  }
+}
+
+/* 翻面：自转 + 压扁（scaleY 变小），比单纯自转更像叶子在风里打旋 */
+@keyframes leafFlutter {
+  from {
+    transform: rotate(-40deg) scale(1, 0.62);
+  }
+  to {
+    transform: rotate(46deg) scale(0.86, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 减少动效时不是"停在终点"（那会留下几片悬在半空的叶子），而是整层不显示 */
+  .wind {
+    display: none;
+  }
+}

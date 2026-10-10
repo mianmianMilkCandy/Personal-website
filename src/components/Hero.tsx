@@ -6,6 +6,7 @@ import { useTheme, THEME_LABEL } from '../hooks/useTheme'
 import Icon from './Icon'
 import LocalClock from './LocalClock'
 import Reveal from './Reveal'
+import WindLeaves from './WindLeaves'
 import './Hero.css'
 
 const ART_WEBP = asset('media/hero-cat.webp')
@@ -151,8 +152,7 @@ export default function Hero() {
           </div>
         ) : null}
 
-        {HERO_VIDEO && videoOk ? (
-          <video
+        {HERO_VIDEO && videoOk ? (          <video
             className={videoReady ? 'hero__video is-ready' : 'hero__video'}
             src={HERO_VIDEO}
             autoPlay
@@ -172,6 +172,12 @@ export default function Hero() {
         <div className="hero__veil" />
         <div className="hero__vignette" />
         <div className="hero__grid" />
+
+        {/* 风里的落叶 —— 故意放在**所有氛围层之后**：叶子是"近处"的东西，不该被
+            scrim / veil / vignette 那几层当远景压暗，否则在亮云上根本看不见
+            （实测：浅色叶 + 压在 scrim 之后 = 完全看不出来）。
+            为什么不直接让画里的爬藤摆：见 WindLeaves.tsx 顶部说明。 */}
+        <WindLeaves />
       </div>
 
       {/* 版式对齐参考站：左下文案块（大标题 + 胶囊动作行）+ 底部 SCENE 小字
