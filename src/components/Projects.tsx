@@ -5,6 +5,7 @@ import { asset, assetUrl } from '../lib/asset'
 import { sectionArt } from '../lib/sectionArt'
 import { stagger } from '../lib/stagger'
 import ArtSky from './ArtSky'
+import WindLeaves from './WindLeaves'
 import Icon, { type IconName } from './Icon'
 import Reveal from './Reveal'
 import SectionHead from './SectionHead'
@@ -46,6 +47,9 @@ function Face({ children }: { children: ReactNode }) {
       style={PROJECTS_ART}
     >
       <ArtSky />
+      {/* 风里的落叶与花瓣。放在画作/天空层之后、正文之前 —— 正文在 base.css 里
+          是 z-index 1，所以东西从画上飞过、但不从字上飞过。 */}
+      <WindLeaves />
       <div className="shell">{children}</div>
     </section>
   )

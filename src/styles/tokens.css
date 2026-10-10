@@ -51,6 +51,7 @@
   --accent-glow: rgba(240, 179, 87, 0.16);
   --accent-line: rgba(240, 179, 87, 0.38);
   --accent-text: #f8cf8c;
+  --petal: #f6aec4;   /* 风里的花瓣（WindLeaves）*/
 
   /* ── 首屏合成：左侧渐深让文字落在暗面，右侧留出画面的亮部 ────────── */
   --hero-scrim: linear-gradient(
@@ -300,6 +301,7 @@
   --accent-glow: rgba(47, 127, 184, 0.16);
   --accent-line: rgba(47, 127, 184, 0.34);
   --accent-text: #1f5f8f;
+  --petal: #e58aa4;   /* 风里的花瓣（WindLeaves）*/
 
   --hero-scrim: linear-gradient(
     100deg,
