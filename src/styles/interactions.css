@@ -1,0 +1,105 @@
+/* ============================================================================
+   interactions.css · 悬停触发的交互（"触"这一组动效）
+   ----------------------------------------------------------------------------
+   与其它动效同一套纪律：只动 transform / opacity / box-shadow / color，
+   不改变任何盒尺寸 —— 所以悬停永远不会推动排版（排版是冻结过的）。
+   颜色全部走令牌 + color-mix，本文件不出现字面色。
+
+   三条：
+     1. 项目卡：指针跟随的光斑 + 极轻的 3D 倾斜 + 抬升（数值由 hooks/useCardSpotlight.ts 写）
+     2. 按钮：扫过一道光
+     3. 时间线行：左侧亮起一道竖光，周期字提亮
+   ========================================================================== */
+
+/* ── 1. 项目卡 ─────────────────────────────────────────────────────────────── */
+.project {
+  position: relative;
+  transition:
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+/* data-spot 由 useCardSpotlight 在指针进入卡片时挂上，离开时摘掉 */
+.project[data-spot] {
+  /* 倾斜上限 ±1.1°：再大文字的透视变形就能被看出来，读起来像在晃 */
+  transform: perspective(1000px) translateY(-3px) rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
+  box-shadow: var(--card-lift);
+}
+
+.project::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+  background: radial-gradient(
+    340px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 15%, transparent),
+    transparent 72%
+  );
+}
+
+.project[data-spot]::after {
+  opacity: 1;
+}
+
+/* ── 2. 按钮扫光 ───────────────────────────────────────────────────────────── */
+/* .btn::before 已被手绘描边（filter: url(#sketch-line)）占用，所以用 ::after */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in srgb, var(--fg) 26%, transparent),
+    transparent
+  );
+  transform: translate3d(-140%, 0, 0) skewX(-16deg);
+  transition:
+    transform var(--dur-3) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out);
+}
+
+.btn:hover::after {
+  opacity: 1;
+  transform: translate3d(260%, 0, 0) skewX(-16deg);
+}
+
+/* ── 3. 时间线行 ───────────────────────────────────────────────────────────── */
+.timeline__item {
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.timeline__item:hover {
+  box-shadow: inset 3px 0 0 var(--accent-line);
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.timeline__item:hover .timeline__period {
+  color: var(--accent-text);
+}
+
+/* ── 减少动效 ─────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .project[data-spot] {
+    transform: none;
+  }
+  .btn::after {
+    display: none;
+  }
+  .project,
+  .timeline__item {
+    transition: none;
+  }
+}

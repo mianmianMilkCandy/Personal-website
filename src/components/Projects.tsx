@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react'
+import { useRef, type CSSProperties, type ReactNode } from 'react'
 
 import { projects, type Project } from '../data/projects'
+import { useCardSpotlight } from '../hooks/useCardSpotlight'
 import { asset, assetUrl } from '../lib/asset'
 import { sectionArt } from '../lib/sectionArt'
 import { stagger } from '../lib/stagger'
@@ -241,6 +242,11 @@ function Index() {
 }
 
 export default function Projects({ part }: { part: ProjectsPart }) {
+  // 悬停触发的卡片交互（指针跟光斑 + 轻微倾斜）。必须在 early return 之前
+  // 调用 —— 否则切换 part 时 hook 数量会变（React 的规则）。
+  const listRef = useRef<HTMLOListElement>(null)
+  useCardSpotlight(listRef)
+
   if (part === 'index') return <Index />
 
   const index = PROJECT_FACES.find((face) => face.id === part)?.index ?? -1
@@ -249,7 +255,7 @@ export default function Projects({ part }: { part: ProjectsPart }) {
 
   return (
     <Face>
-      <ol className="projects__list projects__list--solo">
+      <ol className="projects__list projects__list--solo" ref={listRef}>
         <Card project={project} index={index} />
       </ol>
     </Face>

@@ -1,6 +1,7 @@
 import { useEffect, type CSSProperties } from 'react'
 
 import About from './components/About'
+import Ambience from './components/Ambience'
 import Closing from './components/Closing'
 import Cube, { type CubeFace } from './components/Cube'
 import DevNotice from './components/DevNotice'
@@ -14,6 +15,7 @@ import { assetUrl } from './lib/asset'
 import { initClickShine } from './lib/clickShine'
 import { initSmoothAnchors } from './lib/smoothAnchors'
 import './App.css'
+import './styles/interactions.css'
 
 /**
  * 整页氛围层用竖版那张画 —— 竖构图铺在滚动长页上比横版自然。
@@ -74,6 +76,10 @@ export default function App() {
             过渡由棱承担。Seam 组件与其令牌保留给"关闭 3D"的降级路径。 */}
         <Cube faces={FACES} />
       </main>
+
+      {/* 整页氛围光（远/近光带 + 旋流光 + 指针光）。压在面之上、导航之下 ——
+          于是它像"打在画面上的光"，既不挡交互，也洗不掉导航文字。见 Ambience.tsx */}
+      <Ambience />
 
       {/* 氛围层与颗粒层都固定定位、pointer-events 关闭，绝不拦截交互 */}
       <div className="page-bg" style={pageBgStyle} aria-hidden="true" />

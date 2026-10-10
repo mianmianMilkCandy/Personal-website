@@ -51,6 +51,7 @@
   --accent-glow: rgba(240, 179, 87, 0.16);
   --accent-line: rgba(240, 179, 87, 0.38);
   --accent-text: #f8cf8c;
+  --card-lift: 0 18px 46px -24px rgba(3, 8, 16, 0.62);   /* 卡片悬停抬升的投影 */
   --petal: #f6aec4;   /* 风里的花瓣（WindLeaves）*/
 
   /* ── 首屏合成：左侧渐深让文字落在暗面，右侧留出画面的亮部 ────────── */
@@ -301,6 +302,7 @@
   --accent-glow: rgba(47, 127, 184, 0.16);
   --accent-line: rgba(47, 127, 184, 0.34);
   --accent-text: #1f5f8f;
+  --card-lift: 0 16px 40px -26px rgba(24, 34, 48, 0.28);  /* 卡片悬停抬升的投影 */
   --petal: #e58aa4;   /* 风里的花瓣（WindLeaves）*/
 
   --hero-scrim: linear-gradient(

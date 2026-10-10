@@ -1,0 +1,159 @@
+/* ============================================================================
+   Ambience · 整页氛围光（远光带 / 近光带 / 旋流光 / 指针光）
+   ----------------------------------------------------------------------------
+   四种动效各自对应一层，全部只动 transform / opacity（合成器），不碰布局。
+   颜色一律走令牌（--accent / --fg）+ color-mix，本文件里不出现任何字面色。
+
+   层级：--z-nav 是 50、颗粒层是 60。光层压在面之上（否则看不见），
+   但留在导航之下 —— 于是它永远不挡交互、也不会把导航文字洗掉。
+   ========================================================================== */
+
+.amb {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+  /* 子层各自设 mix-blend-mode，这里不设 —— 否则整层会先合成再混合，
+     指针光与旋流光就没法各自用不同的混合方式了。 */
+}
+
+/* ── 远 / 近两层光带：滚动驱动的纵深（"穿梭"） ──────────────────────────────
+   图案用 repeating-linear-gradient，纵向周期 = JS 里位移取模的那个周期，
+   所以位移到 300px 时正好接回 0px —— 循环处无缝，不会"跳一下"。
+   大半径 blur 把条带糊成一片一片的柔光。 */
+.amb__far,
+.amb__near {
+  position: absolute;
+  /* 上下各留出一个周期，位移时不会露出边缘 */
+  inset: -320px -10% -320px -10%;
+  background: repeating-linear-gradient(
+    176deg,
+    transparent 0 96px,
+    color-mix(in srgb, var(--accent) 22%, transparent) 96px 154px,
+    transparent 154px 300px
+  );
+  filter: blur(72px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+.amb__far {
+  opacity: 0.3;
+  transform: translate3d(0, var(--amb-shift, 0px), 0);
+  /* 呼吸：很慢的一层明暗起伏（只动 opacity，代价接近零） */
+  animation: ambBreath 19s var(--ease-in-out) infinite alternate;
+}
+
+.amb__near {
+  /* 反向 + 更快的位移：与远层拉开速度差，纵深就出来了 */
+  opacity: 0.22;
+  transform: translate3d(0, calc(var(--amb-shift, 0px) * -1.7), 0);
+  background: repeating-linear-gradient(
+    184deg,
+    transparent 0 150px,
+    color-mix(in srgb, var(--fg) 14%, transparent) 150px 196px,
+    transparent 196px 300px
+  );
+}
+
+@keyframes ambBreath {
+  from {
+    opacity: 0.22;
+  }
+  to {
+    opacity: 0.38;
+  }
+}
+
+/* ── 旋流光：转角由**滚动进度**直接驱动 ─────────────────────────────────────
+   一圈锥形光带，`--amb-deg` 由 Ambience.tsx 每帧按 scrollY 写入（每面 42°）。
+   整层用 transform 旋转：光斑是模糊的，转起来的栅格化误差看不出来，
+   而旋转本身只是合成层上的一个矩阵 —— 不重绘、不重排。 */
+.amb__swirl {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 190vmax;
+  height: 190vmax;
+  margin: -95vmax 0 0 -95vmax;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--accent) 26%, transparent) 46deg,
+    transparent 104deg,
+    transparent 168deg,
+    color-mix(in srgb, var(--fg) 16%, transparent) 214deg,
+    transparent 286deg
+  );
+  filter: blur(58px);
+  opacity: 0.34;
+  mix-blend-mode: screen;
+  transform: rotate(calc(var(--amb-deg, 0) * 1deg));
+  transition: opacity var(--dur-3) var(--ease-out);
+  will-change: transform;
+}
+
+/* 换面途中点亮：滚动越快、光越盛 —— "穿梭"最直观的一处读数 */
+.amb[data-shuttle] .amb__swirl {
+  opacity: 0.62;
+}
+
+.amb[data-shuttle] .amb__near {
+  opacity: 0.34;
+}
+
+/* ── 指针氛围光：跟着光标的一团柔光 ────────────────────────────────────────
+   位置由 JS 直接写 transform（指针事件里 rAF 节流），拖尾交给这里的 transition
+   —— 平滑完全由浏览器在合成层完成，不需要常驻的 lerp 循环。 */
+.amb__glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 46vmax;
+  height: 46vmax;
+  margin: -23vmax 0 0 -23vmax;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 20%, transparent) 0%,
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  transform: translate3d(var(--amb-x, 50vw), var(--amb-y, 42vh), 0);
+  transition: transform 900ms var(--ease-out);
+  will-change: transform;
+}
+
+/* 白天主题下"发光"等于洗白：换成相乘，于是同一套光变成一层淡影 */
+[data-theme='day'] .amb__far,
+[data-theme='day'] .amb__near,
+[data-theme='day'] .amb__swirl,
+[data-theme='day'] .amb__glow {
+  mix-blend-mode: multiply;
+  opacity: 0.12;
+}
+
+/* 触屏 / 无精确指针：指针光没有意义 */
+@media (pointer: coarse) {
+  .amb__glow {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 减少动效：光留着当静态照明，但不呼吸、不旋转、不跟随 */
+  .amb__far,
+  .amb__glow {
+    animation: none;
+    transition: none;
+  }
+  .amb__swirl,
+  .amb__far,
+  .amb__near {
+    transition: none;
+  }
+  .amb__glow {
+    display: none;
+  }
+}

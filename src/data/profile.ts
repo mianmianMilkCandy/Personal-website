@@ -119,28 +119,28 @@ export const profile = {
       org: 'C 盘清理工具（clean）',
       role: '独立开发 · 架构 / 后端 / 前端 / 打包发布',
       detail:
-        '主导 Python 内嵌 HTTP 服务与垃圾扫描 / 清理引擎，覆盖系统、Chrome / Edge / Firefox、微信、QQ 四类缓存的路径自适应扫描；用 pywebview + Edge WebView2 做桌面壳，PyInstaller 打成约 20 MB 的单文件 exe，目标机无需安装 Python。',
+        '主导 Python 内嵌 HTTP 服务与垃圾扫描 / 清理引擎，覆盖系统、Chrome / Edge / Firefox、微信、QQ 四类缓存的路径自适应扫描；用 pywebview + Edge WebView2 做桌面壳，PyInstaller 打成约 20 MB 单文件 exe。',
     },
     {
       period: '2025 — 至今',
       org: 'DeepCognitiveAgent · AI 学习与推理项目集',
       role: '独立开发（AI 协作完成）',
       detail:
-        '5 个 Python 模块：基于 ChromaDB + OpenAI API 的深度记忆聊天机器人（RAG / 事实核查 / 记忆去重与冲突检测）、多引擎异步联网搜索爬虫（Bing / Brave / DuckDuckGo / Wikipedia 并发与故障转移）、通用推理引擎（DFS / BFS / A* / MCTS）、纯标准库神经网络与自我反思心智模型。',
+        '5 个 Python 模块：基于 ChromaDB + OpenAI API 的深度记忆聊天机器人（RAG / 事实核查 / 记忆去重）、多引擎异步搜索爬虫（Bing / Brave / DuckDuckGo / Wikipedia 并发与故障转移）、通用推理引擎（DFS / BFS / A* / MCTS）、纯标准库神经网络与自我反思心智模型。',
     },
     {
       period: '2026',
       org: '计算机软件著作权 · 2 项',
       role: '著作权人（原始取得 · 全部权利）',
       detail:
-        '《社区地慧眼地震风险感知与避险引导软件》V1.0（登记号 2026SR0354008，软著登字第 17568289 号，2026-02-28 登记）；《明眸全域施工安全监测系统》V1.0（登记号 2026SR0448309，软著登字第 17662590 号，2026-03-17 登记）。登记证书原件可在面试时提供备查。',
+        '《社区地慧眼地震风险感知与避险引导软件》V1.0（登记号 2026SR0354008，软著登字第 17568289 号）；《明眸全域施工安全监测系统》V1.0（登记号 2026SR0448309，软著登字第 17662590 号）。',
     },
     {
       period: '在读',
       org: '全日制本科',
       role: '在读应届毕业生 · 中国 · 广东',
       detail:
-        '在校期间以自学 + AI 协作为主推进技术栈（Python 后端、数据库、本地知识库），并独立完成上述软著与开源项目。学校、专业与毕业年份可按投递岗位补充。',
+        '在校期间以自学 + AI 协作为主推进技术栈（Python 后端、数据库、本地知识库），并独立完成上述软著与开源项目。',
     },
   ] as TimelineItem[],
 
