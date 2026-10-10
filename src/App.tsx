@@ -15,6 +15,7 @@ import { assetUrl } from './lib/asset'
 import { initClickShine } from './lib/clickShine'
 import { initSmoothAnchors } from './lib/smoothAnchors'
 import './App.css'
+import './styles/art-scrim.css'
 import './styles/interactions.css'
 
 /**

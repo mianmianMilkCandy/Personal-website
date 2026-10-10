@@ -24,11 +24,11 @@
   /* 收尾页整屏只有一句大标题 + 几个链接，没有正文段落要保护，
      所以画可以比其它区块亮一档，让"回廊尽头看海"（原图 4）真的看得见。
      其它区块维持全局的 --sec-art-opacity（dusk 0.2 / day 0.26）。 */
-  --sec-art-opacity: 0.32;
+  --sec-art-opacity: 0.4;
 }
 
 [data-theme='day'] .closing {
-  --sec-art-opacity: 0.4;
+  --sec-art-opacity: 0.48;
 }
 
 /* 会飘的天空层用的是共用组件 ArtSky（见 ArtSky.css）—— 收尾页与关于 / 项目
