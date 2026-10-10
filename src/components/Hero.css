@@ -119,6 +119,81 @@
   .hero__video {
     object-position: 50% 38%;
   }
+  /* ⚠️ 云层在这一档要一起换：竖版是另一张画（hero-cat-portrait）与另一个取景，
+     遮罩和背景位置都必须跟着走，否则遮罩会与实景错位 —— 而且是静默的。 */
+  .hero__clouds {
+    -webkit-mask-image: var(--sky-mask-portrait);
+    mask-image: var(--sky-mask-portrait);
+    -webkit-mask-position: 50% 38%;
+    mask-position: 50% 38%;
+  }
+  .hero__clouds-drift {
+    background-position: 50% 38%;
+  }
+}
+
+/* ── 动态云层 ──────────────────────────────────────────────────────────────
+   需求：天空里的云缓缓飘移，而台阶、石栏、猫、海面**一个像素都不许动**。
+
+   做法（也就是把参考视频"优化"回来的地方）：不做视频那种整幅重绘，而是把
+   **同一张画**再画一层，只让它的天空区可见（遮罩 sky-hero-cat.png），再让整层
+   缓慢位移 + 轻微放大：
+     · 遮罩边界贴着实景轮廓走，轮廓外露出的仍是基座那张原图 → 建筑零位移；
+     · 参考视频里天空带的最优平移量实测是 **0px**（云在原地翻涌，不是整幅在平移，
+       见 _repo/vid/motion.py），所以这里做成"平移 + 放大"的缓慢往复，
+       而不是一条直线的横向滚动；
+     · 全程只有 transform 在变 → 走合成器，不重排不重绘，也不注册任何 rAF
+       （本站纪律：不得引入常驻循环）。
+
+   为什么背景图复用同一张画：它在首屏本来就加载过（还带 preload），这里直接用缓存，
+   新增的只有那张 6.8 KB 的遮罩。若另做一张"天空条"，首屏要多背 100 KB 以上。
+
+   ⚠️ 遮罩必须与 <picture> 的取景一一对应（改一边就要改另一边，否则静默错位）：
+        mask-size: cover        ↔  object-fit: cover
+        mask-position: 50% 45%  ↔  object-position: 50% 45%（窄屏 50% 38%，见上）
+   -------------------------------------------------------------------------- */
+.hero__clouds {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* 与基座 <img> 完全同一套变换：视差 + 1.05 基准缩放。
+     少任何一个，滚动时这一层就会与实景错开（因为 <img> 自己在动）。 */
+  transform: translate3d(0, var(--parallax, 0%), 0) scale(1.05);
+  -webkit-mask-image: var(--sky-mask);
+  mask-image: var(--sky-mask);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: 50% 45%;
+  mask-position: 50% 45%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.hero__clouds-drift {
+  position: absolute;
+  inset: 0;
+  background-image: var(--hero-art);
+  background-size: cover;
+  background-position: 50% 45%;
+  /* linear + alternate：全程匀速，页面一打开就在动（ease-in-out 会在起点停住十几秒，
+     实测过，见 base.css 里 cloudDrift 那段注释）。首屏这张画在屏幕上最大，
+     周期取 12s ⇒ 约 8px/s，5 秒能走出四十来像素 —— "不用盯着看也知道在动"。
+     想更快/更慢只改这个秒数（周期越短越快，方向反转也越频繁）。 */
+  animation: cloudDrift 12s linear infinite alternate;
+  /* 这一层是**常年**在动的，提一层合成层是划算的；
+     与 base.css 里"刻意不给 50+ 个 .reveal 加 will-change"并不矛盾 —— 那是数量问题。 */
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* base.css 的全局规则会把 animation-duration 压到 0.001ms 且只播 1 次，
+     那等于"立刻跳到动画终点"（偏 2.2% 且放大 5%）。这里显式归零，
+     回到与底图完全重合的中点姿态 —— 也就是"和改动前逐像素相同"。 */
+  .hero__clouds-drift {
+    animation: none;
+    transform: none;
+  }
 }
 
 .hero__image {

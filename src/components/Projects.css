@@ -160,6 +160,11 @@
   .project__visual-wipe {
     transform: none;
   }
+  /* 见 Hero.css 里同一段说明：全局规则会把动画停在终点，这里显式回到与底图重合的中点 */
+  .project__sky-drift {
+    animation: none;
+    transform: none;
+  }
 }
 
 .project__index {
@@ -220,6 +225,56 @@
 .project:hover .project__art {
   opacity: 0.8;
   transform: scale(1.03);
+}
+
+/* ── 视觉带里的"会飘的天空" ────────────────────────────────────────────────
+   与首屏 / 区块天空层是同一件事（原理、参数与四个坑见 Hero.css 与 base.css 的
+   cloudDrift 注释）。卡片这一处多两个必须对齐的地方：
+
+   1. 卡片画是一张真 <img>（不是背景），所以天空层得**复刻它的取景**：
+        object-fit: cover       ↔ background-size: cover
+        （两个盒子都是 inset:0，所以取景逐像素一致）
+   2. hover 时 `.project__art` 会 `opacity: .62 → .8` + `scale(1.03)`。
+      天空层必须**原样跟上**，否则一悬停实景放大、天空不放大，遮罩边界立刻错位。
+      遮罩挂在**带 transform 的这一层**上：遮罩先在该层本地坐标系生效、再被整体变换，
+      于是它跟着实景一起缩放（与首屏 .hero__clouds 同一手法）。
+   3. 背景图用同一张 card-*.webp：它在立方体舞台里本来就会在首屏被拉取（见
+      Projects.tsx 里 cardSky() 的注释），所以这里不增加任何首屏字节。
+   -------------------------------------------------------------------------- */
+.project__sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* 与 .project__art 的 0.62 / hover 0.8 完全一致 */
+  opacity: 0.62;
+  -webkit-mask-image: var(--sky-mask);
+  mask-image: var(--sky-mask);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+}
+
+.project:hover .project__sky {
+  opacity: 0.8;
+  transform: scale(1.03);
+}
+
+.project__sky-drift {
+  position: absolute;
+  inset: 0;
+  background-image: var(--card-art);
+  background-size: cover;
+  background-position: center;
+  /* 卡片带比首屏窄（约 1150px），周期也跟着略短，让 px/s 与首屏接近 */
+  animation: cloudDrift 11s linear infinite alternate;
+  will-change: transform;
 }
 
 /* 色调薄膜：把画压进当前主题，并保证描边大字与徽标读得清 */

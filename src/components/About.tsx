@@ -5,6 +5,7 @@ import { asset } from '../lib/asset'
 import { sectionArt } from '../lib/sectionArt'
 import { stagger } from '../lib/stagger'
 import { useCopy } from '../hooks/useCopy'
+import ArtSky from './ArtSky'
 import Icon, { socialIcon, type IconName } from './Icon'
 import Reveal from './Reveal'
 import SectionHead from './SectionHead'
@@ -79,11 +80,12 @@ const PORTRAIT_SRC = asset('media/portrait.jpg')
  */
 export type AboutPart = 'intro' | 'contact' | 'story' | 'caps'
 
-const ABOUT_ART = sectionArt('sec-about.webp')
+const ABOUT_ART = sectionArt('sec-about.webp', 'sky-sec-about.png')
 
 function Face({ children }: { children: ReactNode }) {
   return (
     <section className="section about has-art face-body" style={ABOUT_ART}>
+      <ArtSky />
       <div className="shell">{children}</div>
     </section>
   )
@@ -189,7 +191,10 @@ function Contact() {
                       type="button"
                       className={done ? 'contact__copy is-done' : 'contact__copy'}
                       onClick={() => void copy(copyText, row.key)}
-                      aria-label={`复制${row.label}`}
+                      /* 无障碍名要跟着**可见文案**走：按钮点了之后可见文字是
+                         "已复制"，如果 aria-label 还钉在"复制邮箱"上，
+                         读屏用户听到的名字就与屏幕上的字对不上（WCAG 2.5.3）。 */
+                      aria-label={done ? `已复制：${row.label}` : `复制${row.label}`}
                     >
                       {done ? '已复制' : '复制'}
                     </button>

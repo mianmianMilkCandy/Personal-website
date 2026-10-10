@@ -34,6 +34,10 @@ export default function Cube({ faces }: { faces: CubeFace[] }) {
 
   return (
     <div className="cube">
+      {/* ⚠️ 面的 id **只挂在这里**（.cube__track 里的绝对定位锚点），
+          面内的 <section> 一律不带 id —— 见 Hero.tsx / Closing.tsx 里的说明。
+          两个元素抢同一个 id 时，getElementById 只返回文档序在前的那个，
+          而这一层恰好在前；一旦有人重排 DOM，深链与导航高亮会静默失准。 */}
       <div
         className="cube__track"
         style={{ '--face-count': faces.length } as CSSProperties}

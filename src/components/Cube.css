@@ -74,7 +74,12 @@
 
    代价说明：这套只动留白与卡片内边距，**没有**改任何字号、行高或文案。
    唯一动到视觉的是项目卡视觉带 230 → 196px（一张卡少 34px 画作高度），
-   这是把 work-dca 从 16px 溢出压到 0 的必要代价。 */
+   这是把 work-dca 从 16px 溢出压到 0 的必要代价。
+
+   ⚠️ 2026-10-10 更新：项目文案压缩之后（每张卡少一条要点、句子整体更短），
+   实测余量 work-clean 98.7 → 133.3px、work-dca 65.3 → 168px —— 于是"压卡片"
+   这一步不再需要，视觉带**已恢复到压之前的 230px**，仍然零溢出（实测）。
+   复测方式：node _repo/perf/facecheck.mjs <dist> <标签>（逐面报溢出与余量）。 */
 .cube__slot .section {
   padding-block: 2.25rem;
 }
@@ -84,7 +89,7 @@
 }
 
 .cube__slot .project__visual {
-  min-height: 196px;
+  min-height: 230px;
 }
 
 .cube__slot .project__body {

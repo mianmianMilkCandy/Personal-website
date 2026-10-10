@@ -14,6 +14,8 @@
 
    实现是**文档级一个委托监听**（和 lib/clickShine.ts 同一套路），
    所以给新按钮加平滑锚点不用改任何组件。
+
+   ⚠️ 唯一的例外是 `.skip-link`（"跳到主内容"）—— 理由见 onClick 里那段注释。
    ========================================================================== */
 
 /** `#a%20b` 这类百分号编码要解回来；解不开（畸形编码会抛 URIError）就放弃接管，
@@ -42,6 +44,14 @@ export function initSmoothAnchors(): () => void {
     const anchor = target.closest('a[href^="#"]')
     if (!(anchor instanceof HTMLAnchorElement)) return
     if (anchor.target && anchor.target !== '_self') return
+
+    /* 跳转链接**不接管**：它的契约不是"平滑滚过去"，而是"把键盘焦点送进主内容"。
+       顺序焦点起点只有**原生锚点跳转**会挪动；一旦 preventDefault，焦点还留在
+       链接自己身上 —— 此时按 Tab 会落到紧随其后的导航链接上，这个控件对键盘
+       用户等于完全没生效（WCAG 2.4.1 要的就是"能绕过重复内容"）。
+       放行给浏览器：它只做一次瞬时跳转（本站本来也没有全局 scroll-behavior），
+       换来的是一条真正可用的绕过路径。 */
+    if (anchor.classList.contains('skip-link')) return
 
     const id = decodeHash(anchor.hash)
     if (!id) return

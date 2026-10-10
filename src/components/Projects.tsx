@@ -1,13 +1,31 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 import { projects, type Project } from '../data/projects'
-import { asset } from '../lib/asset'
+import { asset, assetUrl } from '../lib/asset'
 import { sectionArt } from '../lib/sectionArt'
 import { stagger } from '../lib/stagger'
+import ArtSky from './ArtSky'
 import Icon, { type IconName } from './Icon'
 import Reveal from './Reveal'
 import SectionHead from './SectionHead'
 import './Projects.css'
+
+/**
+ * 卡片视觉带里那层"会飘的天空"要的两个 CSS 变量。
+ *
+ * 两个都由 CSS 消费（背景图 + 遮罩），所以必须走 assetUrl 解析成绝对地址 ——
+ * 相对地址会以消费它的那张样式表为基准解析而 404（见 lib/asset.ts）。
+ *
+ * 复用同一张卡片画不会增加首屏成本：这两张 card-*.webp 在立方体舞台里
+ * **本来就会在首屏被拉取**（九个面都在 fixed 舞台的视口里，`loading="lazy"`
+ * 在架构上失效 —— 实测停首屏 6 秒、未滚动，card-01/02 各 50/88 KB 已在资源清单里）。
+ */
+function cardSky(art: string, skyMask: string): CSSProperties {
+  return {
+    '--card-art': `url(${assetUrl(`media/${art}`)})`,
+    '--sky-mask': `url(${assetUrl(`media/${skyMask}`)})`,
+  } as CSSProperties
+}
 
 /** 按指标名猜图标，保持 data/projects.ts 是纯数据。 */
 function metricIcon(label: string): IconName {
@@ -19,7 +37,7 @@ function metricIcon(label: string): IconName {
   return 'spark'
 }
 
-const PROJECTS_ART = sectionArt('sec-projects.webp')
+const PROJECTS_ART = sectionArt('sec-projects.webp', 'sky-sec-projects.png')
 
 function Face({ children }: { children: ReactNode }) {
   return (
@@ -27,6 +45,7 @@ function Face({ children }: { children: ReactNode }) {
       className="section section--alt projects has-art face-body"
       style={PROJECTS_ART}
     >
+      <ArtSky />
       <div className="shell">{children}</div>
     </section>
   )
@@ -60,6 +79,17 @@ function Card({ project, index }: { project: Project; index: number }) {
               loading="lazy"
               decoding="async"
             />
+          ) : null}
+          {/* 会飘的天空：同一张画再画一层，只用遮罩露出天空区再缓慢位移 ——
+              实景（石廊/门/花盆/猫）仍是基座 <img> 的像素。原理见 base.css 的 cloudDrift。 */}
+          {project.art && project.artSky ? (
+            <div
+              className="project__sky"
+              style={cardSky(project.art, project.artSky)}
+              aria-hidden="true"
+            >
+              <div className="project__sky-drift" />
+            </div>
           ) : null}
           <span className="project__visual-veil" />
           <span className="project__visual-grid" />
