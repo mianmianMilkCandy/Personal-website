@@ -11,28 +11,11 @@
   min-height: 100svh;
   overflow: hidden;
   isolation: isolate;
-  /* 兜底：相对颜色语法不可用时 --surface-deep-0 会在计算值阶段失效，
-     整条声明作废 —— 先给一版纯色表面。 */
-  background: var(--surface-deep);
-  /* 顶端淡入：表面色在区块边界处阶跃本身就是一条硬边，而收尾页上面
-     正好是一条折痕。底端保持实色 —— 页脚要落在一块实的暗底上。 */
-  background: linear-gradient(
-    180deg,
-    var(--surface-deep-0) 0%,
-    var(--surface-deep) var(--art-fade)
-  );
-  /* 收尾页整屏只有一句大标题 + 几个链接，没有正文段落要保护，
-     所以画可以比其它区块亮一档，让"回廊尽头看海"（原图 4）真的看得见。
-     其它区块维持全局的 --sec-art-opacity（dusk 0.2 / day 0.26）。 */
-  --sec-art-opacity: 0.4;
+  /* ⚠️ 2026-10 起这里**没有 background**：原来是一层顶端淡入的 --surface-deep
+     （72% 实白），它会把整屏铺白，连续背景与列车就全被盖掉了。
+     收尾页只有一句大标题加几个链接、没有正文段落要保护，所以正文白纱由
+     .has-art::after（styles/art-scrim.css）统一给，这里不再另加一层。 */
 }
-
-[data-theme='day'] .closing {
-  --sec-art-opacity: 0.48;
-}
-
-/* 会飘的天空层用的是共用组件 ArtSky（见 ArtSky.css）—— 收尾页与关于 / 项目
-   三个区块共用同一套 `.art-sky`，所以这里不再有自己的那一段。 */
 
 /* 底部冷色辉光：把视线压向页面中心偏下，收尾页不至于空得发慌。
    z-index 0（不是 -1）：区块画作也在 0 层，靠 DOM 顺序让辉光压在画之上。 */
@@ -58,6 +41,9 @@
   max-width: var(--shell);
   margin-inline: auto;
   padding: var(--sp-9) var(--gutter);
+  /* 与 .face-body 同一个理由（见 Cube.css）：把这一屏的内容上抬，
+     给背景里那列火车（56~100vh）让出通道。 */
+  padding-bottom: calc(var(--sp-9) + 18vh);
 }
 
 .closing__eyebrow {
@@ -91,9 +77,12 @@
 }
 
 @supports (-webkit-text-stroke: 1px #000) {
+  /* ⚠️ 描边色从 --line-3（38% 深墨）换成实墨：
+     这行"幽灵标题"压在亮云上，38% 的线基本看不见，整行字就等于消失了。
+     现在它是一行真正的空心字，压在云上仍然成立。 */
   .closing__title-line--ghost {
     color: transparent;
-    -webkit-text-stroke: 1.2px var(--line-3);
+    -webkit-text-stroke: 1.4px var(--fg-2);
     font-weight: 400;
   }
 }

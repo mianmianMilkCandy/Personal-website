@@ -3,18 +3,25 @@
    左窄右宽的编辑式分栏，左侧信息栏吸顶。
    ========================================================================== */
 
-/* ── 图标概览：把能力矩阵先用四张"贴纸"翻译一遍 ─────────────────────── */
+/* ── 图标概览：把能力矩阵先用若干张"贴纸"翻译一遍 ─────────────────────
+   ⚠️ 列数在宽屏上直接给 5（= profile.capabilities 的条数）。
+   原来写的是 4 列而条目有 5 条，于是第 5 张单独占一行 —— 多出来的 150px
+   正好把这一面的内容顶进列车带（见 Cube.css 的 .face-body 说明）。
+   数据增删时这里要跟着 5 走，否则又会塌成两行。 */
 .about__highlights {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--sp-5);
-  margin-bottom: var(--sp-8);
+  /* 这一面本来是最高的那一屏（540px），而给列车让完路之后只剩 ~558px 可用，
+     所以这几处间距是**按预算**压的：两块 margin 各 36 → 20，区块上下留白
+     各 36 → 24。加起来省下 56px，它才退得出列车带。 */
+  margin-bottom: var(--sp-5);
 }
 
 .about__highlight {
   display: grid;
   justify-items: start;
-  gap: 0.5rem;
+  gap: 0.35rem;
   padding-right: var(--sp-4);
 }
 
@@ -29,7 +36,13 @@
   color: var(--fg-3);
   text-transform: none;
   letter-spacing: 0.02em;
-  line-height: 1.5;
+  line-height: 1.45;
+  /* 技术清单最多两行：第三行会把这一面顶穿（`.about__highlight-note` 最长
+     的那一条是「aiohttp · BeautifulSoup4 · trafilatura」）。 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .about__aside {
@@ -171,11 +184,17 @@ a.contact__value:hover {
   justify-self: start;
 }
 
-/* ── 自述 ─────────────────────────────────────────────────────────────── */
+/* ── 自述 ───────────────────────────────────────────────────────────────
+   ⚠️ 这里必须自己给行宽：`.cube__slot .about__bio { max-width: 58rem }` 只约束
+   宽度，三段正文在 1600 视口下仍然会铺满整条版心（实测宽到 1340px），
+   高度也压不下来。排成两栏之后高度从 216px 降到 ~140px —— 这一面本来就
+   超高，省下的高度正好让它从列车带里退出来（见 Cube.css 的 .face-body）。
+   引子横跨两栏：它只有一句话，拆栏反而多一行（实测过，多 33px）。 */
 .about__bio {
   display: grid;
-  gap: var(--sp-4);
-  max-width: 64ch;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-4) var(--sp-8);
+  max-width: 68rem;
 }
 
 .about__bio p {
@@ -184,8 +203,9 @@ a.contact__value:hover {
 
 /* 首段提亮放大：读者只会认真读第一段，把重点压在这里 */
 .about__bio p:first-child {
+  grid-column: 1 / -1;
   font-size: var(--fs-lead);
-  line-height: 1.68;
+  line-height: 1.6;
   color: var(--fg);
 }
 
@@ -203,19 +223,27 @@ a.contact__value:hover {
   color: var(--accent);
 }
 
+/* ⚠️ 经历与能力这两屏的条目都排成**两栏**（2026-10 换背景时改的）。
+   单栏时 4 条经历高 710px、5 行能力高 444px，而给列车让完路之后一屏只剩
+   66vh（≈594px）可用 —— 单栏的经历会从底下被静默切掉，能力矩阵的最后两行
+   会落到列车带上（字压在车身上读不出来）。两栏之后 710 → ≈380px，两件事
+   一起解决。窄档回落到单栏（见文件末尾的媒体查询）。 */
 .timeline {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--sp-8);
 }
 
 .timeline__item {
   display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr);
-  gap: var(--sp-5);
-  padding-block: var(--sp-5);
+  grid-template-columns: 6.2rem minmax(0, 1fr);
+  gap: var(--sp-4);
+  padding-block: 0.85rem;
   border-bottom: 1px solid var(--line);
 }
 
-.timeline__item:first-child {
+/* 两栏时"第一行"是前两条，所以上边线要给 :nth-child(-n + 2) */
+.timeline__item:nth-child(-n + 2) {
   border-top: 1px solid var(--line);
 }
 
@@ -252,7 +280,7 @@ a.contact__value:hover {
   grid-template-columns: 5rem minmax(0, 1fr);
   gap: var(--sp-4);
   align-items: start;
-  padding-block: var(--sp-4);
+  padding-block: 0.7rem;
   border-bottom: 1px solid var(--line);
 }
 
@@ -297,6 +325,7 @@ a.contact__value:hover {
 }
 
 @media (max-width: 1160px) {
+  /* 窄档才把 5 列拆成两行 —— 宽屏必须保持一行，理由见上面 .about__highlights */
   .about__highlights {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--sp-6);
@@ -306,6 +335,16 @@ a.contact__value:hover {
   }
   .portrait {
     max-width: 300px;
+  }
+  /* 经历回落到单栏：两栏在窄屏上会把技术名折成三四行，反而更高 */
+  .timeline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .timeline__item:nth-child(-n + 2) {
+    border-top: 0;
+  }
+  .timeline__item:first-child {
+    border-top: 1px solid var(--line);
   }
 }
 

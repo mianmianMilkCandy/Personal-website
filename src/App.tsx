@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react'
+import { useEffect } from 'react'
 
 import About from './components/About'
 import Ambience from './components/Ambience'
@@ -10,23 +10,13 @@ import EntryGate from './components/EntryGate'
 import Hero from './components/Hero'
 import Nav from './components/Nav'
 import Projects, { PROJECT_FACES } from './components/Projects'
+import SkyStage from './components/SkyStage'
 import { UNFILLED } from './data/profile'
-import { assetUrl } from './lib/asset'
 import { initClickShine } from './lib/clickShine'
 import { initSmoothAnchors } from './lib/smoothAnchors'
 import './App.css'
 import './styles/art-scrim.css'
 import './styles/interactions.css'
-
-/**
- * 整页氛围层用竖版那张画 —— 竖构图铺在滚动长页上比横版自然。
- * 素材是一张 160px 的糊图（2 KB），不是首屏原图（会白拉 283 KB）。
- * 这里必须用 assetUrl（绝对地址）：它由 App.css 的 var(--page-bg-image) 消费，
- * 相对地址会以样式表所在目录为基准解析而 404。
- */
-const pageBgStyle = {
-  '--page-bg-image': `url(${assetUrl('media/ambient-portrait.webp')})`,
-} as CSSProperties
 
 /**
  * 面表 —— 整站就是这根棱柱的若干个侧面（面数 = 数组长度，动态）。
@@ -70,6 +60,11 @@ export default function App() {
         跳到主内容
       </a>
 
+      {/* 连续背景层：一整幅晴空（云在飘）+ 一列沿地平线跑、悬停会停下的火车。
+          它在 <main> 之前、z-index 0，所以九个面转来转去时它纹丝不动 ——
+          "每一页背景连续"这件事完全由它承担。见 SkyStage.tsx */}
+      <SkyStage />
+
       <Nav />
 
       <main id="main">
@@ -82,8 +77,7 @@ export default function App() {
           于是它像"打在画面上的光"，既不挡交互，也洗不掉导航文字。见 Ambience.tsx */}
       <Ambience />
 
-      {/* 氛围层与颗粒层都固定定位、pointer-events 关闭，绝不拦截交互 */}
-      <div className="page-bg" style={pageBgStyle} aria-hidden="true" />
+      {/* 颗粒层固定定位、pointer-events 关闭，绝不拦截交互 */}
       <div className="grain" aria-hidden="true" />
 
       {/* 手绘描边按钮用的湍流位移滤镜（base.css 里的 `filter: url(#sketch-line)`）。

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import { profile } from '../data/profile'
 import { useActiveSection } from '../hooks/useActiveSection'
-import { useTheme, THEME_LABEL } from '../hooks/useTheme'
 import CursorTint from './CursorTint'
 import Icon from './Icon'
 import './Nav.css'
@@ -17,15 +16,11 @@ const NAV_ITEMS = [
 
 const NAV_IDS = NAV_ITEMS.map((item) => item.id)
 
-/** 把主题包装成"场景"，对齐参考站右上角那枚控件簇的语义。 */
-const SCENE_NO = { dusk: '01', day: '02' } as const
-
 export default function Nav() {
   const [stuck, setStuck] = useState(false)
   const stuckRef = useRef(false)
   const progressRef = useRef<HTMLSpanElement>(null)
   const active = useActiveSection(NAV_IDS)
-  const { theme, toggleTheme } = useTheme()
 
   // 吸顶状态 + 阅读进度：都用 rAF 节流，进度直接写 DOM，不引发重渲染
   useEffect(() => {
@@ -88,8 +83,6 @@ export default function Nav() {
     }
   }, [])
 
-  const nextLabel = theme === 'day' ? '黄昏' : '白昼'
-
   return (
     <header className={stuck ? 'nav is-stuck' : 'nav'}>
       <nav className="nav__inner" aria-label="主导航">
@@ -127,23 +120,10 @@ export default function Nav() {
           {/* 光标配色控件：指针图标 + 一排色板圆点（悬停即预览、点击即生效） */}
           <CursorTint />
 
-          {/* 玻璃控件簇：参考站右上角那枚。这里装载"场景/主题"切换 */}
-          <button
-            type="button"
-            className="nav__cluster glass"
-            onClick={toggleTheme}
-            title={`切换为${nextLabel}`}
-            aria-label={`当前场景：${THEME_LABEL[theme]}，切换为${nextLabel}`}
-          >
-            <span className="nav__cluster-icon" aria-hidden="true">
-              <Icon name={theme === 'day' ? 'spark' : 'cloud'} />
-            </span>
-            <span className="nav__cluster-text mono">Scene {SCENE_NO[theme]}</span>
-            <span className="nav__cluster-dots" aria-hidden="true">
-              <i className={theme === 'dusk' ? 'is-on' : undefined} />
-              <i className={theme === 'day' ? 'is-on' : undefined} />
-            </span>
-          </button>
+          {/* 这里原来挂着一枚玻璃控件簇（云图标 + Train · Run/Hold/Drag 读数
+              + 两个状态点）。它只是把 SkyStage 写在 <html data-train> 上的状态
+              复述一遍，不承担任何操作，2026-10 按要求撤掉 —— 列车状态改成
+              **靠车本身**表达（悬停停车、按住可拖），右上角只留真正能点的控件。 */}
 
           <a className="pill nav__cta" href="#contact">
             联系我

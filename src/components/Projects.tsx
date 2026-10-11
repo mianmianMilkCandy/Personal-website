@@ -3,9 +3,7 @@ import { useRef, type CSSProperties, type ReactNode } from 'react'
 import { projects, type Project } from '../data/projects'
 import { useCardSpotlight } from '../hooks/useCardSpotlight'
 import { asset, assetUrl } from '../lib/asset'
-import { sectionArt } from '../lib/sectionArt'
 import { stagger } from '../lib/stagger'
-import ArtSky from './ArtSky'
 import WindLeaves from './WindLeaves'
 import Icon, { type IconName } from './Icon'
 import Reveal from './Reveal'
@@ -39,17 +37,18 @@ function metricIcon(label: string): IconName {
   return 'spark'
 }
 
-const PROJECTS_ART = sectionArt('sec-projects.webp', 'sky-sec-projects.png')
-
+/**
+ * 索引面与详情面共用同一个"载体"。
+ *
+ * ⚠️ 2026-10 起 `.section--alt`（52% 实白底）**不再挂在面上**：它会把整屏
+ * 铺白，连续背景与列车就看不见了。正文的可读性改由两件更"局部"的东西承担：
+ *   · `.has-art::after` 的正文本白纱（上下两端淡出，画面在上下缘仍透得出来）；
+ *   · 卡片自己那块实白底（.project 的 --ink-700）。
+ * 卡片的配图（card-01/02.webp + 各自的天空遮罩）**保持原样**。
+ */
 function Face({ children }: { children: ReactNode }) {
   return (
-    <section
-      className="section section--alt projects has-art face-body"
-      style={PROJECTS_ART}
-    >
-      <ArtSky />
-      {/* 风里的落叶与花瓣。放在画作/天空层之后、正文之前 —— 正文在 base.css 里
-          是 z-index 1，所以东西从画上飞过、但不从字上飞过。 */}
+    <section className="section projects has-art face-body">
       <WindLeaves />
       <div className="shell">{children}</div>
     </section>

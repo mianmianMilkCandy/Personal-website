@@ -46,6 +46,12 @@
   height: 100%;
   overflow: hidden;
   transform-origin: 50% 50%;
+  /* 面内是一屏、且面自己 overflow: hidden —— 所以内含是**结构上成立**的：
+     这一面的绘制永远影响不到外面。声明出来让浏览器可以在"这一面转出视口"
+     时整块跳过绘制，而不必先把 9 个面都算一遍（9 × 1.44 Mpx）。
+     注意是 paint 而不是 strict/layout：面内是一套独立的居中网格，
+     加 layout 内含会改变它的包含块语义，得重测所有面的排版。 */
+  contain: paint;
   /* 面内是"一屏"，区块级的超大留白要压下来，内容才装得进 100svh。
      只压大档间距，小间距保持原样（贴纸、标签的节奏感不丢）。
      下面这四个值比令牌默认值更紧，依据见本节末尾那组实测数据。 */
@@ -81,7 +87,14 @@
    这一步不再需要，视觉带**已恢复到压之前的 230px**，仍然零溢出（实测）。
    复测方式：node _repo/perf/facecheck.mjs <dist> <标签>（逐面报溢出与余量）。 */
 .cube__slot .section {
-  padding-block: 2.25rem;
+  padding-block: 1.5rem;
+}
+
+/* 区块抬头与正文块之间的间距：面高只有一屏、还要给列车让出 34vh，
+   这里从 4rem 收到 1.25rem（见 About.css 的 .about__highlights 说明）。
+   `.section-head` 是 base.css 里的通用样式，所以只收面内的那一份。 */
+.cube__slot .section-head {
+  margin-bottom: 1.25rem;
 }
 
 .cube__slot .timeline__item {
@@ -97,7 +110,10 @@
 }
 
 .cube__slot .closing__inner {
-  padding-block: 1.5rem;
+  /* 同 .face-body 的理由与纪律：收尾页的内容也要抬上去给列车让路。
+     这里必须一起写 padding-block，否则 .cube__slot .section 那类
+     高特异度的简写会把 padding-bottom 覆盖掉。 */
+  padding-block: 1.5rem 22vh;
 }
 
 .cube__slot .closing__eyebrow {
@@ -177,8 +193,8 @@
    面内受影响的是这两处（都是设计里本来就要"高透明度、看得见画"的元素）：
      · `.hero__card`（首屏玻璃卡，底色 28% 不透明）
      · `.pill--quiet` / `.btn--ghost`（手绘按钮，底色 12% 不透明）
-     · `.glass` 的默认底（`.nav__cluster` / `.curtint` 也用 .glass，但它们在
-       固定导航里、不在面上，所以这里的选择器只命中面内的那一份）
+     · `.glass` 的默认底（导航里的 `.curtint` 也用 .glass，但它在固定导航里、
+       不在面上，所以这里的选择器只命中面内的那一份）
    去掉模糊之后它们仍然半透明、仍然看得见背后的画，只是不再"揉开"画面。
    想要模糊回来：把下面这条整段删掉即可（代价就是翻面时的掉帧）。 */
 .cube__slot .hero__card,
@@ -189,12 +205,42 @@
   -webkit-backdrop-filter: none;
 }
 
-/* 面内的正文容器：垂直居中；内容比一屏高时用 safe 让溢出只发生在下边 */
-.face-body {
+/* 面内的正文容器：垂直居中；内容比一屏高时用 safe 让溢出只发生在下边。
+   ⚠️ padding-bottom 是**给背景里的列车让位**的（2026-10 换背景时加的）：
+   地平线钉在 80vh，列车车体落在 58~80vh、倒影在 80~100vh，而面上内容是
+   居中的（中心 50vh），于是正文块的下半截正好压在列车上。把容器下沿收掉
+   34vh 之后内容中心移到 33vh 左右，正文带落在 5%~58% —— 与列车带刚好错开。
+   代价是内容可用高度只剩 66vh，所以 README 里那套"逐面溢出实测"必须重跑
+   （node _repo/perf/facecheck.mjs <dist>）；压不下去的面要减内容或改两栏，
+   不要反过来把这个数调小。
+
+   ⚠️⚠️ 选择器必须带 `.cube__slot`：同一条 padding 在下面还有一条
+   `.cube__slot .section { padding-block: 2.25rem }`（0,2,0）—— 它比
+   `.face-body`（0,1,0）特异度更高，会把这里的 padding-bottom 整条盖掉。
+   实测踩过：量出来九面的内容依旧居中在 450px，白改一轮。 */
+.cube__slot .face-body {
   height: 100%;
   display: grid;
   align-content: center;
   align-content: safe center;
+  padding-bottom: 34vh;
+}
+
+/* ── 矮屏（≤ 840px 高，1366×768 / 1280×800 这一档）────────────────────────
+   这一屏高只装得下 ~480px 正文，而列车车顶在 0.8H − 0.126W 处（公式见
+   tokens.css 的 --sky-hz-screen）：768 高的屏上车顶只有 442px，正文根本
+   退不出去。所以矮屏单独把地平线再压下去、并把列车缩小一档 ——
+   代价是镜面水只剩 16vh（16:9 上是 20vh），换来的是正文与列车不打架。 */
+@media (max-height: 840px) {
+  :root {
+    --sky-hz-screen: 84vh;
+    /* 矮屏把**近端最大尺寸**也收一档。逐帧的 --train-k 是归一化的，会自动
+       跟着这一档缩，不需要 JS 里另加分支。 */
+    --train-scale: 0.44;
+  }
+  .cube__slot .face-body {
+    padding-bottom: 26vh;
+  }
 }
 
 /* ── 面化之后，原先"长区块"里的几处版式要跟着改 ────────────────────────── */
@@ -218,8 +264,10 @@
   margin-inline: auto;
 }
 
-/* 面与面之间的交界由"棱"承担，画作两端不再需要淡出；
-   表面色也不再需要两端渐隐（棱本身就是分界）。 */
+/* 面与面之间的交界由"棱"承担；画作两端不再需要淡出，
+   表面色也不再需要两端渐隐（棱本身就是分界）。
+   2026-10 起区块画作整块下线（背景由固定的 SkyStage 统一承载），
+   `--sec-art` 不再有消费者，这两条只是把降级路径的状态钉住。 */
 .cube .has-art::before {
   -webkit-mask-image: none;
   mask-image: none;

@@ -24,13 +24,14 @@
   pointer-events: none;
 }
 
-/* 背景用的是 160px 的糊图，放大后天然柔焦 —— 0.7 KB 换来一屏氛围底 */
+/* 背景复用连续背景层的底图：放大了再糊一遍，等于把门后那片天揉成一片空气。
+   糊半径压到 18px —— 底图本身就是细笔触的画，28px 只会白烧一次大卷积。 */
 .gate__bg {
   position: absolute;
   inset: -8%;
   background-size: cover;
-  background-position: 58% 42%;
-  filter: blur(28px) saturate(1.2);
+  background-position: 50% 46%;
+  filter: blur(18px) saturate(1.16) brightness(1.03);
   transform: scale(1.08);
   animation: gateDrift 34s var(--ease-in-out) infinite alternate;
 }
@@ -91,8 +92,11 @@
   padding: 1.05rem 2.4rem;
   border: 1px solid var(--glass-bd);
   border-radius: var(--r-full);
-  background: var(--glass-bg);
+  /* ⚠️ 不能直接用 --glass-bg（66% 白）：门后那片天本身就是亮的，
+     白玻璃压在亮天上等于没有形状。这里用 88% 实白 + 一层软投影把按钮"铆"住。 */
+  background: color-mix(in srgb, var(--ink-700) 88%, transparent);
   color: var(--fg);
+  box-shadow: 0 20px 44px -24px rgba(20, 56, 88, 0.5);
   backdrop-filter: blur(var(--glass-blur)) saturate(150%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
   transition:
@@ -104,7 +108,7 @@
 .gate__btn:hover {
   transform: translateY(-2px);
   border-color: var(--accent-line);
-  background: var(--hover-veil);
+  background: var(--ink-700);
 }
 
 .gate__btn-cn {

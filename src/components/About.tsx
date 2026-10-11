@@ -2,10 +2,8 @@ import { useState, type ReactNode } from 'react'
 
 import { profile } from '../data/profile'
 import { asset } from '../lib/asset'
-import { sectionArt } from '../lib/sectionArt'
 import { stagger } from '../lib/stagger'
 import { useCopy } from '../hooks/useCopy'
-import ArtSky from './ArtSky'
 import WindLeaves from './WindLeaves'
 import Icon, { socialIcon, type IconName } from './Icon'
 import Reveal from './Reveal'
@@ -81,14 +79,20 @@ const PORTRAIT_SRC = asset('media/portrait.jpg')
  */
 export type AboutPart = 'intro' | 'contact' | 'story' | 'caps'
 
-const ABOUT_ART = sectionArt('sec-about.webp', 'sky-sec-about.png')
-
+/**
+ * 四个面共用同一个"载体"。
+ *
+ * ⚠️ 2026-10 起这里**不再挂区块画作**（原来是 --sec-art + ArtSky 天空遮罩）。
+ * 九个面现在共用一张连续背景（App.tsx 的 <SkyStage />），每面再压一张画，
+ * 翻面时就会出现"两层风景各转各的"；`has-art` 这个类保留下来是因为它同时
+ * 是正文带白纱的挂点（见 styles/art-scrim.css）。
+ *
+ * 风里的落叶与花瓣留在画作层之后、正文之前 —— 正文在 base.css 里是
+ * z-index 1，所以东西从背景上飞过、但不从字上飞过。
+ */
 function Face({ children }: { children: ReactNode }) {
   return (
-    <section className="section about has-art face-body" style={ABOUT_ART}>
-      <ArtSky />
-      {/* 风里的落叶与花瓣。放在画作/天空层之后、正文之前 —— 正文在 base.css 里
-          是 z-index 1，所以东西从画上飞过、但不从字上飞过。 */}
+    <section className="section about has-art face-body">
       <WindLeaves />
       <div className="shell">{children}</div>
     </section>

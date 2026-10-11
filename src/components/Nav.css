@@ -1,5 +1,5 @@
 /* ============================================================================
-   Nav · 顶部条（对齐参考站：左侧"点 + 字标"，右侧玻璃控件簇）
+   Nav · 顶部条（对齐参考站：左侧"点 + 字标"，右侧光标配色 + 胶囊 CTA）
    ========================================================================== */
 
 .nav {
@@ -131,62 +131,22 @@
   color: var(--accent-text);
 }
 
-/* ── 右侧：玻璃控件簇 + 胶囊 CTA ──────────────────────────────────────── */
+/* ── 右侧：光标配色 + 胶囊 CTA ────────────────────────────────────────── */
 .nav__actions {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
 }
 
-.nav__cluster {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.34rem 0.7rem;
-  border-radius: var(--r-full);
-  color: var(--fg-2);
-  transition:
-    color var(--dur-1) var(--ease-out),
-    border-color var(--dur-1) var(--ease-out);
-}
+/* 列车状态读数（.nav__cluster：云图标 + `Train · Run/Hold/Drag` + 两个状态点）
+   2026-10 已按用户要求整块撤掉 —— 它只是把 <html data-train> 复述一遍、
+   不承担任何操作，列车状态改成靠车本身表达（悬停停车 / 按住可拖）。
+   data-train 仍然由 SkyStage 写，下面这条拖拽期的 user-select 还要用。 */
 
-.nav__cluster:hover {
-  color: var(--fg);
-  border-color: var(--accent-line);
-}
-
-.nav__cluster-icon {
-  display: grid;
-  place-items: center;
-  color: var(--accent);
-}
-
-.nav__cluster-icon .icon {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-
-.nav__cluster-text {
-  white-space: nowrap;
-}
-
-/* 两格小指示器：当前场景亮起 —— 替代参考站那条进度滑块 */
-.nav__cluster-dots {
-  display: inline-flex;
-  gap: 3px;
-  margin-left: 0.1rem;
-}
-
-.nav__cluster-dots i {
-  width: 4px;
-  height: 4px;
-  border-radius: var(--r-full);
-  background: var(--line-3);
-  transition: background var(--dur-2) var(--ease-out);
-}
-
-.nav__cluster-dots i.is-on {
-  background: var(--accent);
+/* 拖拽中：告诉浏览器别在这次手势里选中文字 / 拖走图片 */
+html[data-train='drag'],
+html[data-train='drag'] * {
+  user-select: none;
 }
 
 /* 导航里的 CTA 比正文胶囊再小一档：它只需要在细条里站住 */
@@ -208,16 +168,15 @@
 }
 
 @media (max-width: 1000px) {
-  /* PC 优先：窄屏先收掉中部链接，保留字标、场景簇与 CTA */
+  /* PC 优先：窄屏先收掉中部链接，保留字标与 CTA */
   .nav__links {
     display: none;
   }
 }
 
 @media (max-width: 760px) {
-  /* 窄屏只留"图标 + 场景点"：文字全部让位给控件本身 */
-  .nav__brand-role,
-  .nav__cluster-text {
+  /* 窄屏只留字标与控件本身 */
+  .nav__brand-role {
     display: none;
   }
   .nav__cta {

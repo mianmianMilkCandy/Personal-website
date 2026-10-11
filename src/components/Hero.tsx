@@ -1,72 +1,42 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { profile } from '../data/profile'
-import { asset, assetUrl } from '../lib/asset'
-import { useTheme, THEME_LABEL } from '../hooks/useTheme'
+import { THEME_LABEL } from '../hooks/useTheme'
 import Icon from './Icon'
 import LocalClock from './LocalClock'
 import Reveal from './Reveal'
 import WindLeaves from './WindLeaves'
 import './Hero.css'
 
-const ART_WEBP = asset('media/hero-cat.webp')
-const ART_JPG = asset('media/hero-cat.jpg')
-const ART_PORTRAIT_WEBP = asset('media/hero-cat-portrait.webp')
-const ART_PORTRAIT_JPG = asset('media/hero-cat-portrait.jpg')
-
 /**
- * 动态云层要的三样东西**全部由 CSS 消费**（背景图 + 两张遮罩），
- * 所以必须走 assetUrl（解析成绝对地址）：相对地址会以消费它的那张样式表为基准
- * 解析而 404 —— 这个坑在本站已经踩过一次（见 lib/asset.ts）。
+ * 首屏。
  *
- * 天空遮罩是"白=天空、透明=实景"的 alpha PNG，由 _repo/vid/skygen.py 从同一张画上
- * 按多边形 + 羽化生成，只有 7 KB 左右；云层本身复用上面那张已经加载过的画，
- * 所以开这个效果**不会**给首屏增加一张大图的负担。
+ * ⚠️ 2026-10 起这里**不再有自己的画**。
+ * 原来这一面背后是一张「台阶上的猫」竖/横两版 <picture>，外加一层同画的
+ * 云遮罩。背景需求改成"九个面共用同一张连续晴空、上面跑一列火车"之后，
+ * 首屏这张画就成了唯一还在"跟着面转"的东西 —— 它一转，连续性就断了。
+ * 所以画、clound 遮罩、视频槽位、视差、以及它们那一堆取景对齐纪律
+ * **整块删除**；首屏现在只剩"合成层"（scrim / veil / 暗角 / 网格）与内容。
+ * 真正的画面由 App.tsx 里的 <SkyStage /> 固定在所有面之后承载。
  *
- * ⚠️ 遮罩与 <picture> 的取景必须同源：遮罩的尺寸/位置要和 object-fit /
- * object-position 一一对应（含窄屏那一套），否则遮罩会静默错位。
+ * 保留的是"幕布"相位：面不在场时把这几层合成压暗一点、面转正时重新点亮
+ * （见 Hero.css 的 heroCurtain）。它现在压的是白纱而不是画，所以观感从
+ * "画面退到后面"变成"这一屏的雾气浓淡"—— 与背景连续这件事不冲突。
  */
-const CLOUD_STYLE = {
-  '--hero-art': `url(${assetUrl('media/hero-cat.webp')})`,
-  '--sky-mask': `url(${assetUrl('media/sky-hero-cat.png')})`,
-  '--sky-mask-portrait': `url(${assetUrl('media/sky-hero-cat-portrait.png')})`,
-} as CSSProperties
 
-/**
- * 可选循环视频的文件名（相对 public/media/）。
- *
- * 留空 = 站内没有视频，此时**根本不渲染 <video>**。
- * 原因：public/media/ 下没有这个文件时，浏览器仍会为一个必定 404 的地址
- * 发请求（preload="metadata" 也会真的去拉一次），白占一次往返、
- * 在控制台留一条错误，还会让 React 多一次 setState。
- *
- * 要启用：把视频放到 public/media/ 下，然后把这行改成 'media/hero-loop.mp4'。
- */
-const HERO_VIDEO_FILE: string = ''
-const HERO_VIDEO = HERO_VIDEO_FILE ? asset(HERO_VIDEO_FILE) : null
+/** 首屏不需要额外的行内变量了；这个常量留着，方便以后加"只给首屏"的取值。 */
+const HERO_STYLE = undefined
 
 export default function Hero() {
-  const [imgOk, setImgOk] = useState(true)
-  const [videoOk, setVideoOk] = useState(true)
-  const [videoReady, setVideoReady] = useState(false)
-
   const mediaRef = useRef<HTMLDivElement>(null)
-  const { theme } = useTheme()
 
   /* --------------------------------------------------------------------------
-     首屏的视差：逐帧把 `--parallax` 写到 .hero__media 这一层（而不是 <img>）
+     首屏的滚动相位：逐帧把 `--parallax` 写到 .hero__media
      --------------------------------------------------------------------------
-     变量挂在外层容器上、由内部的 <img> / <video> 各自用 `var(--parallax)` 消费：
-     自定义属性会继承，所以两个消费者拿到的都是同一个值 —— 若直接写在 <img> 上，
-     <video> 那条路径就拿不到（而视频是有可能出现的，见 HERO_VIDEO_FILE）。
-
-     真正要守住的是"变化只落在 transform 上"：`--parallax` 只被
-     translate3d 的 y 分量消费，于是这层位移走合成器，不会牵连父层的
-     will-change 合成层，也不会让那张 2000px 宽、还带一层 filter 调色的
-     <img> 被拉进重栅格化。父层写的 9 个面 transform 与它无关。
-
-     幅度仍是 8%（`max` 里的那个系数），只在滚过首屏这一屏的范围内线性变化；
-     滚出首屏后 p 恒为 1，值不再变、也就不再有任何写入。
+     以前它驱动的是那张画的位移（8% 视差）。画删掉之后这个变量改由**合成层**
+     消费：白纱与暗角随滚动极轻微地加厚，做出"离开首屏时雾气收拢"的过渡，
+     而背景本身纹丝不动（连续性优先）。
+     仍然只写 transform / opacity 的输入值，且滚出首屏后 p 恒为 1、值不再变。
      ------------------------------------------------------------------------ */
   useEffect(() => {
     const media = mediaRef.current
@@ -74,15 +44,13 @@ export default function Hero() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     let frame = 0
-    // 首屏高度是 min-height:100svh 撑的，只在 resize 时重量（不每帧读 offsetHeight）
     let heroHeight = media.offsetHeight || window.innerHeight || 1
-    // 上一帧写进去的值：同值直接 return，不碰 DOM
     let last = ''
 
     const update = () => {
       frame = 0
       const p = Math.min(1, Math.max(0, window.scrollY / heroHeight))
-      const next = `${(p * 8).toFixed(2)}%`
+      const next = (p * 8).toFixed(2)
       if (next === last) return
       last = next
       media.style.setProperty('--parallax', next)
@@ -113,76 +81,22 @@ export default function Hero() {
        .cube__stage 里，文档内位置对滚动没有意义 —— 两个元素抢同一个 id 时
        getElementById 只会返回文档序在前的那个，深链与导航高亮全靠这个巧合。
        重排 Cube 的 DOM 就会静默失准，所以不要把这个 id 加回来。 */
-    <section className="hero">
+    <section className="hero" style={HERO_STYLE}>
       <div className="hero__media" ref={mediaRef} aria-hidden="true">
-        {imgOk ? (
-          <picture>
-            {/* 窄屏/竖屏换竖版取景；每个断点都配 WebP + JPEG 两条，
-                非 WebP 浏览器会落到同取景的 JPEG，而不是掉回横版被硬裁 */}
-            <source
-              media="(max-width: 900px)"
-              srcSet={ART_PORTRAIT_WEBP}
-              type="image/webp"
-            />
-            <source media="(max-width: 900px)" srcSet={ART_PORTRAIT_JPG} />
-            <source
-              media="(max-aspect-ratio: 1/1)"
-              srcSet={ART_PORTRAIT_WEBP}
-              type="image/webp"
-            />
-            <source media="(max-aspect-ratio: 1/1)" srcSet={ART_PORTRAIT_JPG} />
-            <source srcSet={ART_WEBP} type="image/webp" />
-            <img
-              className="hero__image"
-              src={ART_JPG}
-              alt=""
-              decoding="async"
-              fetchPriority="high"
-              onError={() => setImgOk(false)}
-            />
-          </picture>
-        ) : null}
-
-        {/* 动态云层：天空区用同一张画的位移副本缓慢飘移，台阶与猫一个像素不动。
-            原理与参数见 Hero.css 那一节。只在图片可用时挂 —— 图挂了这里也只是一张空底。
-            位置：在 <picture> 之后、<video> 与各层遮罩之前，所以视频存在时会盖住它。 */}
-        {imgOk ? (
-          <div className="hero__clouds" style={CLOUD_STYLE} aria-hidden="true">
-            <div className="hero__clouds-drift" />
-          </div>
-        ) : null}
-
-        {HERO_VIDEO && videoOk ? (          <video
-            className={videoReady ? 'hero__video is-ready' : 'hero__video'}
-            src={HERO_VIDEO}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            onCanPlay={() => setVideoReady(true)}
-            onError={() => setVideoOk(false)}
-          />
-        ) : null}
-
-        {/* 画面兜底：没有视频时只看图片是否可用；有视频时两者都坏了才用 CSS 渐变兜底 */}
-        {!imgOk && (!HERO_VIDEO || !videoOk) ? <div className="hero__fallback" /> : null}
-
         <div className="hero__scrim" />
         <div className="hero__veil" />
         <div className="hero__vignette" />
         <div className="hero__grid" />
 
         {/* 风里的落叶 —— 故意放在**所有氛围层之后**：叶子是"近处"的东西，不该被
-            scrim / veil / vignette 那几层当远景压暗，否则在亮云上根本看不见
-            （实测：浅色叶 + 压在 scrim 之后 = 完全看不出来）。
+            scrim / veil / vignette 那几层当远景压白，否则在亮云上根本看不见。
             为什么不直接让画里的爬藤摆：见 WindLeaves.tsx 顶部说明。 */}
         <WindLeaves />
       </div>
 
       {/* 版式对齐参考站：左下文案块（大标题 + 胶囊动作行）+ 底部 SCENE 小字
-          + 右下玻璃卡。眉标那一行（职位/英文名）已删除 —— 它与导航左上角的
-          字标重复，且"标题上方再加一个小标签"正是要避免的廉价感来源。 */}
+          + 右下玻璃卡。背景由左下渐白换成了"整屏可读"，所以玻璃卡的底气
+          加强到 62% 实白（见 Hero.css 的 .hero__card）。 */}
       <div className="hero__inner">
         <div className="hero__lead">
           <Reveal variant="up">
@@ -209,8 +123,6 @@ export default function Hero() {
         </div>
 
         <Reveal as="aside" className="hero__card glass" variant="scale" delay={180}>
-          {/* 标签从 Profile 改成 Welcome：原来标题里那行「欢迎来到，」
-              按用户要求删掉，只把"欢迎"这层意思挪到这个英文标签上。 */}
           <p className="hero__card-label mono">
             <Icon name="cat" className="hero__card-label-icon" />
             Welcome
@@ -236,11 +148,11 @@ export default function Hero() {
           </dl>
         </Reveal>
 
-        {/* 参考站左下角那行小字：压在首屏最底边，承载真实信息（场景 / 主题 / 时间）。
+        {/* 参考站左下角那行小字：压在首屏最底边，承载真实信息（场景 / 时间）。
             时钟是独立叶子组件 —— 每秒只重渲染这一个文本节点，见 LocalClock.tsx。 */}
         <Reveal className="hero__scene-row" variant="fade" delay={240}>
           <p className="hero__scene mono">
-            SCENE 01 · {THEME_LABEL[theme]} · UTC+8 <LocalClock />
+            SCENE 01 · {THEME_LABEL.day} · UTC+8 <LocalClock />
           </p>
         </Reveal>
       </div>

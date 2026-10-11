@@ -1,0 +1,243 @@
+/* ============================================================================
+   SkyStage · 连续背景层（积雨云 + 地平线 + 镜面水 + 一列火车）
+   ----------------------------------------------------------------------------
+   几何的全部依据：底图与列车精灵来自**同一次渲染**（见 _repo/bg/build_assets.py），
+   所以只要两者用同一个坐标系，列车就永远压在同一条轨道上。这里用的是
+   「场景盒 + 百分比」：
+
+     .sky__scene 手动复刻 background-size: cover 的那套映射
+                 （width  = max(100vw, 100vh × AR)
+                   height = max(100vw / AR, 100vh)）
+                 再用 translateY 把地平线钉在视口的 --sky-hz-screen 那一行。
+                 于是内部所有子层都可以直接用「底图的百分比」定位，
+                 而不用管视口是 16:9 还是 21:9。
+
+   列车的三个变换分工（改的时候别串）：
+     .sky__train    位移 —— 每帧由 SkyStage.tsx 写 --train-x（px）
+     .sky__sprite   缩放 —— transform-origin 压在**精灵自己的地平线**上，
+                    所以缩小等于"列车离得更远"，车体仍然贴着轨道
+     trainSettle    悬停停稳时的一次车体沉降（一次性的 animation，不是循环）
+
+   ── 卡顿优化（2026-10，第二轮）
+   这一层是"一直有东西在动"的地方，所以它的成本必须按**要光栅/合成的像素量**
+   和**是否每帧重新栅格化**来算，而不是按视觉复杂度。三处改动：
+
+   ① **云层不再做 scale，改成"盒子比场景宽 6%、只平移"**。
+      对一个带 will-change 的合成层做 scale 动画，浏览器为了保持清晰会
+      **逐帧按新缩放重栅格化**那一整层（1600×1424 ≈ 2.3 Mpx）。
+      改成纯平移之后，位移只要 > 0 就不会露出底边（见下面 .sky__drift-inner
+      的 3% 余量），合成器只做一次矩阵变换。缩放原来唯一的用途就是"兜住
+      平移露出的边"，现在由盒子尺寸兜，属于结构性保证，比缩放更稳。
+   ② **云层只做「视口里看得见的那段天空」**：从场景的 66.4% 收到 96vh。
+      1600×900 下 2.28 Mpx → 1.38 Mpx（−39%），宽屏上省得更多。
+   ③ **天光层从场景尺寸改成视口尺寸**（3.43 Mpx → 1.44 Mpx，−58%）。
+      它只是一层渐变，落在视口里与落在场景里视觉等价。
+
+   动效纪律：只有真正在动的那两个小层写 will-change；所有位移只写 transform，
+   绝不写 left / top。云的 keyframes 见 base.css 的 skyDrift。
+   ========================================================================== */
+
+.sky {
+  /* 场景盒的两个尺寸与"地平线在场景里的长度"。
+     提成变量是为了让云层的 background-size / background-position 也能用上
+     —— 它们必须与 .sky__scene 完全一致，否则云层与底图对不齐（静默错位）。 */
+  --sky-scene-w: max(100vw, calc(100vh * var(--sky-ar)));
+  --sky-scene-h: max(calc(100vw / var(--sky-ar)), 100vh);
+  --sky-hz-len: calc(0.6037873270211216 * var(--sky-scene-h));
+
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* 图还没解码出来时的兜底：与底图上缘的天空同色系，不会闪白也不会闪黑 */
+  background: linear-gradient(
+    180deg,
+    #6ea9d8 0%,
+    #9ecbe8 34%,
+    #cfe6f2 52%,
+    #6f9fc6 62%,
+    #3f6c94 100%
+  );
+}
+
+/* ── 场景盒 ────────────────────────────────────────────────────────────────
+   --sky-ar        底图宽高比（2048 / 2746）
+   --sky-hz        地平线在底图里的纵向位置
+   --sky-hz-screen 地平线要钉在视口的哪一行 —— 这是唯一一个"构图旋钮" */
+.sky__scene {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: var(--sky-scene-w);
+  height: var(--sky-scene-h);
+  transform: translate(-50%, calc(var(--sky-hz-screen) - var(--sky-hz)));
+}
+
+/* ── 底图 ────────────────────────────────────────────────────────────────── */
+.sky__base {
+  position: absolute;
+  inset: 0;
+  background-image: var(--sky-plate);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+/* ── 会飘的云 ──────────────────────────────────────────────────────────────
+   两个元素：外层是"取景窗口"（只做视口里看得见的那段天空 + 地平线羽化），
+   内层是真正在动的底图副本（比场景宽 6%，只平移）。
+
+   地平线在窗口里的位置：窗口顶边放在「地平线往上 86vh」处，窗口高 96vh，
+   于是地平线在 86/96 = 89.583% 处，羽化段 80% → 89.583% 正好落在地平线以上。
+
+   内层的 background-size 是"反算"：
+     横向  100% 是**内层自己的宽度**（= 场景宽 × 1.06），除以 1.06 还原成场景宽；
+     纵向  直接给场景高（与 .sky__scene 用同一个表达式）。
+   background-position: 50% + 一个纵向长度 —— 横向的 50% 把 6% 的余量对半分
+   （左右各 3%，正好抵消 left/right: -3%），纵向把图顶上推到场景 y = 0。
+   这两处任何一个错了，云层与底图就会整体错位（而且不报错）。 */
+.sky__drift {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--sky-hz-len) - 86vh);
+  height: 96vh;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 80%,
+    transparent 89.583%
+  );
+  mask-image: linear-gradient(180deg, #000 0%, #000 80%, transparent 89.583%);
+}
+
+.sky__drift-inner {
+  position: absolute;
+  left: -3%;
+  right: -3%;
+  top: 0;
+  height: 100%;
+  background-image: var(--sky-plate);
+  background-repeat: no-repeat;
+  background-size: calc(100% / 1.06) var(--sky-scene-h);
+  background-position: 50% calc(86vh - var(--sky-hz-len));
+  animation: skyDrift 30s linear infinite alternate;
+  will-change: transform;
+}
+
+/* ── 列车 ──────────────────────────────────────────────────────────────────
+   两层：外层管位移 / 缩放 / 透明度（每帧写的 --train-x / -y / -k / -o），
+   内层管悬停沉降。
+
+   ⚠️ 缩放**烘进盒子的宽高**里（--train-scale = 近端最大尺寸），逐帧只改
+   transform 的 scale（--train-k ≤ 1）。两个理由：
+   ① 用未缩放的精灵盒（1.13 Mpx）会让合成层有 82% 是透明像素，白占显存；
+   ② 把逐帧的 scale 写进 width/height 会**每帧触发布局**，而且浏览器会按
+      新尺寸重新光栅化整层 —— 那是最贵的一种写法。
+   所以「由远及近」的缩放走 transform，纹理只会被缩小，永远不会被放大糊掉。
+
+   下面两个表达式是「以精灵自己的**着地行**为原点、按 --train-scale 缩放」的
+   展开式，常量全部来自 _repo/bg/out/meta.json（`contactPct` = 着地行）；
+   **改 meta.json 里的任何一个数、或改 SkyStage.tsx 的 RAIL 表，
+   这里、SkyStage.tsx 的命中判定、以及 _repo/bg/rail_overlay.py 都要一起改**。
+   ⚠️ 原点必须取**车轮着地行**（`contactPct` = 48.9969% 精灵高），不是镜像轴
+   （`originPct` = 47.3765%）——用镜像轴会让列车整体压低 0.765% 图高
+   （1600×900 下 16px），看着像陷进道砟。 */
+.sky__train {
+  position: absolute;
+  left: calc(6.0546875% + (1 - var(--train-scale)) * 70.01953125% / 2);
+  top: calc(
+    38.018936635105604% + (1 - var(--train-scale)) * 47.1959213401311% * 0.489969
+  );
+  width: calc(70.01953125% * var(--train-scale));
+  height: calc(47.1959213401311% * var(--train-scale));
+  /* 缩放原点压着地行 = 车轮压在轨面上的那一行：缩小等于"开得更远"，
+     车轮与轨面的接触点不会跟着缩放乱跑 */
+  transform-origin: 50% 48.9969%;
+  /* 位移 / 缩放 / 透明度由 SkyStage.tsx 每帧写成**写在 .sky 上的三个自定义属性**
+     （--tx/--ty/--tk，透明度 --to 只在跨档时写），这里消费。
+     ⚠️ 实测过一次：把这三个量直接写成本元素的 inline transform，6 秒空闲的
+     主线程忙时从 119ms 涨到 1166ms（约 10×）—— 而把同一组值写成**祖先上的
+     自定义属性**再继承下来只要 119ms。所以这条链不要"优化"成 inline style。 */
+  transform: translate3d(var(--tx, 0px), var(--ty, 0px), 0) scale(var(--tk, 1));
+  will-change: transform;
+}
+
+/* 拖着走的时候给一点"被抓住"的反馈：不写 filter（会触发重栅格），
+   只把渲染顺序提上来，让它压住背景的云与水面碎光。 */
+.sky[data-drag] .sky__train {
+  z-index: 2;
+}
+
+.sky__sprite {
+  position: absolute;
+  inset: 0;
+  background-image: var(--sky-train-img);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* 停稳的那一下：车体在弹簧上沉一下再回弹。一次性 animation，
+   靠 data-held 的**属性重新匹配**触发（attribute 摘掉时动画自动撤掉，
+   元素回到上面那条静态 transform）。缩放已经烘进盒子里了，所以这里只剩位移。 */
+.sky[data-held] .sky__sprite {
+  animation: trainSettle 780ms var(--ease-out);
+}
+
+@keyframes trainSettle {
+  0% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(2.6px);
+  }
+  52% {
+    transform: translateY(-1.2px);
+  }
+  78% {
+    transform: translateY(0.6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* ── 天光：把画面统一到"晴天的空气"里 ────────────────────────────────────
+   ⚠️ 强度刻意很低。这一层是**全局**叠加的，加多少就等于把整幅画的对比度
+   抹掉多少 —— 一开始给了 62% 的白，结果整张照片变成一片惨白（列车也一起没了）。
+   现在只留顶部一点冷白与四角一点深蓝，作用是"统一空气"而不是"提亮画面"。
+   ⚠️ 它挂在 .sky 上（视口尺寸）而不是 .sky__scene 上（场景尺寸，2.4 屏高）：
+   一层渐变没必要按整个场景光栅，省掉 58% 的面积。 */
+.sky__haze {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--sky-haze) 30%, transparent) 0%,
+      color-mix(in srgb, var(--sky-haze) 10%, transparent) 52%,
+      transparent 78%
+    ),
+    radial-gradient(
+      130% 86% at 50% 6%,
+      transparent 52%,
+      color-mix(in srgb, var(--sky-vignette) 16%, transparent) 100%
+    );
+}
+
+/* ── 减少动效：云不飘、列车停在远处（与 base.css 的全局降级一致）─────────
+   base.css 那条把 animation-duration 压到 0.001ms 的规则会让动画立刻跳到终点
+   （偏移 2.83%），这里显式归零回到与底图重合的中点。 */
+@media (prefers-reduced-motion: reduce) {
+  .sky__drift-inner {
+    animation: none;
+    transform: none;
+  }
+  .sky__train {
+    will-change: auto;
+  }
+  .sky[data-held] .sky__sprite {
+    animation: none;
+  }
+}

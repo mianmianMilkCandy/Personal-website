@@ -1,25 +1,23 @@
 /* ============================================================================
-   Hero · 整屏首屏（版式对齐参考站）
+   Hero · 整屏首屏
    ----------------------------------------------------------------------------
    左下 = 大标题（一行：「{名字}的主页。」）+ 一句话 + 高透明度手绘按钮行
    最底边 = 横跨整行的 SCENE 小字（网格第二行，钉住首屏下沿）
-   右下 = 玻璃 PROFILE 卡（现在标签是 WELCOME；透明度 72%）
-   左上 / 右上 = 固定导航（点字标 + 光标配色 + 玻璃控件簇 + CTA）
+   右下 = 玻璃卡（62% 实白，因为背景现在是亮的）
+   左上 / 右上 = 固定导航（点字标 + 光标配色 + 列车状态 + CTA）
 
-   图层自下而上：
-     ① 画作（横/竖两版，按视口切换）
-     ② 可选视频（放了 media/hero-loop.mp4 才出现，能播后淡入）
-     ③ CSS 兜底底
-     ④ 左侧渐深的 scrim —— 让文字落在暗面
-     ⑤ veil / 暗角 / 网格
+   ⚠️ 2026-10 起这一面**不再有自己的画**：画、云遮罩、视频槽位与视差整块删除，
+   画面改由 App.tsx 的 <SkyStage /> 固定在所有面之后承载（连续性要求）。
+   这里只剩四层"合成"，自下而上：
+     ① .hero__scrim     左侧渐白（文字落亮面），右侧留出云与列车
+     ② .hero__veil      上下压白（顶部给导航让位、底部钉住 SCENE 那行）
+     ③ .hero__vignette  四角收一点
+     ④ .hero__grid      极淡的工程网格
+   WindLeaves 在最后 —— 叶子是"近处"的东西，压在合成层之后才看得见。
 
-   （2026-10-09 起删掉了原先的 ⑥ 鼠标跟随聚光：见下面 .hero__grid 之后那段注释。）
-
-   这张画（台阶上的猫）左边三分之一是石阶（实测亮度 88.7），右边是亮云海
-   （170.6），所以文字压左侧几乎不需要额外加暗 —— scrim 只做兜底。
-
-   已删除：① 标题上方的眉标（职位/英文名，与导航左上角字标重复）；
-   ② 标题第一行「欢迎来到，」——那层意思按用户要求挪到右侧卡片的 WELCOME 标签上。
+   对比度的分工也在这一版变了：背景从亮云（相对亮度 ≈0.9）跨到镜面水
+   （≈0.2），任何单一文字色都不可能同时压住两端，所以"正文看得清"由
+   **scrim 的白纱**承担，而不是由文字色承担（见 tokens.css 顶部第 3 条）。
    ========================================================================== */
 
 .hero {
@@ -31,10 +29,11 @@
   padding-top: var(--nav-h);
   overflow: hidden;
   isolation: isolate;
-  background: var(--ink-1000);
+  /* ⚠️ 这里**故意没有 background**：有了就是一整块不透明的面，
+     背后那层连续背景会被它整个盖掉。 */
 }
 
-/* ── 媒体层 ───────────────────────────────────────────────────────────── */
+/* ── 合成层 ───────────────────────────────────────────────────────────── */
 .hero__media {
   position: absolute;
   inset: 0;
@@ -42,23 +41,15 @@
   overflow: hidden;
 }
 
-/* ── 首屏画的进出场（幕布效果）─────────────────────────────────────────────
-   这一层不是 .reveal（它要挂 ref 做视差），所以自己接立方体的相位。
-
-   做法与正文不同，理由：**其它面的画（--sec-art）在转走时是留在面上的**，
-   只有这块 <picture> 是 DOM 里的真图层。要是让它跟着正文一起淡到 0，转过
-   首屏时上半屏会变成一块纯黑（实测截图确认过：脊线位置上半屏全黑，与
-   下半屏那张还亮着的回廊画明显不是一套语言）。
-
-   所以这里只做"压暗 → 重新点亮"：
-     · 面不在场 → 压到 35% 并轻微推近（画还在，只是退到后面）；
-     · 面转正   → 用 animation 从当前这个暗态续到全亮 + 归位。
+/* 首屏合成层的进出场（幕布效果）。做法与正文不同，理由：**其它面的合成层
+   都在 .reveal 体系之外**（它们要挂 ref 做滚动相位），所以自己接立方体的相位。
+   面不在场 → 压到 35% 并轻微推近（这一屏的雾气退到后面）；
+   面转正   → 用 animation 从当前这个暗态续到全亮 + 归位。
    用 animation 而不是 transition 是因为**要能重播**：类名每次重新匹配都会
-   从头播一遍（transition 只在值变化时播，第二次进场就没有了）。from 的位姿
-   与基态完全一致，所以重播时不会有跳变。
+   从头播一遍（transition 只在值变化时播，第二次进场就没有了）。
 
    整段以 .cube__slot 开头：拆掉 3D 走降级路径时这条不匹配任何元素，
-   首屏画自动回到"始终全亮"，不会黑屏。 */
+   合成层自动回到"始终全亮"。 */
 .cube__slot .hero__media {
   opacity: 0.35;
   transform: scale(1.055);
@@ -91,149 +82,15 @@
   }
 }
 
-.hero__media picture {
-  display: contents;
-}
-
-.hero__image,
-.hero__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  /* 猫在中偏左、巨云在右，取中略偏上即可两者都保住 */
-  object-position: 50% 45%;
-  /* --parallax 由 Hero.tsx 直接写在**这个元素**上（不是父层）：
-     它只改自己的 transform，所以每一帧只是合成层位移；
-     若写在父层，父层的 will-change 会把这张 2000px 的图连同它的
-     filter 调色一起拉去重栅格化。
-     这里仍**不写 will-change**：`filter` 是静态值，transform 动画在既有
-     栅格上做位移即可，不需要（也不该）每帧重跑一遍卷积滤镜。 */
-  transform: translate3d(0, var(--parallax, 0%), 0) scale(1.05);
-}
-
-/* 竖版取景已经把猫放到正中，所以这里只需要往下压一点留住台阶 */
-@media (max-width: 900px), (max-aspect-ratio: 1/1) {
-  .hero__image,
-  .hero__video {
-    object-position: 50% 38%;
-  }
-  /* ⚠️ 云层在这一档要一起换：竖版是另一张画（hero-cat-portrait）与另一个取景，
-     遮罩和背景位置都必须跟着走，否则遮罩会与实景错位 —— 而且是静默的。 */
-  .hero__clouds {
-    -webkit-mask-image: var(--sky-mask-portrait);
-    mask-image: var(--sky-mask-portrait);
-    -webkit-mask-position: 50% 38%;
-    mask-position: 50% 38%;
-  }
-  .hero__clouds-drift {
-    background-position: 50% 38%;
-  }
-}
-
-/* ── 动态云层 ──────────────────────────────────────────────────────────────
-   需求：天空里的云缓缓飘移，而台阶、石栏、猫、海面**一个像素都不许动**。
-
-   做法（也就是把参考视频"优化"回来的地方）：不做视频那种整幅重绘，而是把
-   **同一张画**再画一层，只让它的天空区可见（遮罩 sky-hero-cat.png），再让整层
-   缓慢位移 + 轻微放大：
-     · 遮罩边界贴着实景轮廓走，轮廓外露出的仍是基座那张原图 → 建筑零位移；
-     · 参考视频里天空带的最优平移量实测是 **0px**（云在原地翻涌，不是整幅在平移，
-       见 _repo/vid/motion.py），所以这里做成"平移 + 放大"的缓慢往复，
-       而不是一条直线的横向滚动；
-     · 全程只有 transform 在变 → 走合成器，不重排不重绘，也不注册任何 rAF
-       （本站纪律：不得引入常驻循环）。
-
-   为什么背景图复用同一张画：它在首屏本来就加载过（还带 preload），这里直接用缓存，
-   新增的只有那张 6.8 KB 的遮罩。若另做一张"天空条"，首屏要多背 100 KB 以上。
-
-   ⚠️ 遮罩必须与 <picture> 的取景一一对应（改一边就要改另一边，否则静默错位）：
-        mask-size: cover        ↔  object-fit: cover
-        mask-position: 50% 45%  ↔  object-position: 50% 45%（窄屏 50% 38%，见上）
-   -------------------------------------------------------------------------- */
-.hero__clouds {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  /* 与基座 <img> 完全同一套变换：视差 + 1.05 基准缩放。
-     少任何一个，滚动时这一层就会与实景错开（因为 <img> 自己在动）。 */
-  transform: translate3d(0, var(--parallax, 0%), 0) scale(1.05);
-  -webkit-mask-image: var(--sky-mask);
-  mask-image: var(--sky-mask);
-  -webkit-mask-size: cover;
-  mask-size: cover;
-  -webkit-mask-position: 50% 45%;
-  mask-position: 50% 45%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-.hero__clouds-drift {
-  position: absolute;
-  inset: 0;
-  background-image: var(--hero-art);
-  background-size: cover;
-  background-position: 50% 45%;
-  /* linear + alternate：全程匀速，页面一打开就在动（ease-in-out 会在起点停住十几秒，
-     实测过，见 base.css 里 cloudDrift 那段注释）。首屏这张画在屏幕上最大，
-     周期取 12s ⇒ 约 8px/s，5 秒能走出四十来像素 —— "不用盯着看也知道在动"。
-     想更快/更慢只改这个秒数（周期越短越快，方向反转也越频繁）。 */
-  animation: cloudDrift 12s linear infinite alternate;
-  /* 这一层是**常年**在动的，提一层合成层是划算的；
-     与 base.css 里"刻意不给 50+ 个 .reveal 加 will-change"并不矛盾 —— 那是数量问题。 */
-  will-change: transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* base.css 的全局规则会把 animation-duration 压到 0.001ms 且只播 1 次，
-     那等于"立刻跳到动画终点"（偏 2.2% 且放大 5%）。这里显式归零，
-     回到与底图完全重合的中点姿态 —— 也就是"和改动前逐像素相同"。 */
-  .hero__clouds-drift {
-    animation: none;
-    transform: none;
-  }
-}
-
-.hero__image {
-  filter: var(--hero-img-filter);
-}
-
-.hero__video {
-  opacity: 0;
-  filter: saturate(1.05) contrast(1.06) brightness(0.86);
-  transition: opacity var(--dur-3) var(--ease-out);
-}
-
-.hero__video.is-ready {
-  opacity: 1;
-}
-
-.hero__fallback {
-  position: absolute;
-  inset: -10%;
-  background:
-    radial-gradient(58% 52% at 22% 28%, var(--accent-glow), transparent 62%),
-    radial-gradient(54% 48% at 78% 70%, var(--accent-glow), transparent 60%),
-    linear-gradient(160deg, var(--media-base-a), var(--media-base-b));
-  animation: heroDrift 26s var(--ease-in-out) infinite alternate;
-}
-
-@keyframes heroDrift {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(-2.5%, -1.8%, 0) scale(1.06);
-  }
-}
-
-/* ── 合成层 ───────────────────────────────────────────────────────────── */
 .hero__scrim {
   position: absolute;
   inset: 0;
   background: var(--hero-scrim);
+  /* 滚动相位：离开首屏时白纱极轻微地加厚 8%。
+     原来这个变量驱动的是那张画的视差位移，画删掉之后改由合成层消费 ——
+     ⚠️ 只作用在 opacity 上，**不能**作用在 transform 上：这一层是整屏的，
+     给它加位移会让边缘露出没被白纱盖住的背景，正文对比度立刻掉下去。 */
+  opacity: calc(1 + var(--parallax, 0) * 0.01);
 }
 
 .hero__veil {
@@ -251,10 +108,14 @@
 .hero__grid {
   position: absolute;
   inset: 0;
-  opacity: 0.4;
-  background-image:
-    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 96px),
-    repeating-linear-gradient(0deg, var(--grid-soft) 0 1px, transparent 1px 96px);
+  /* ⚠️ 只留横向的极淡网格。原来还有一层 90deg 的竖线，压在**平面感极强的
+     晴空**上会被读成"屏幕的竖条纹"（旧版背后是建筑，竖线才像结构线）。 */
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(
+    0deg,
+    var(--grid-soft) 0 1px,
+    transparent 1px 96px
+  );
   -webkit-mask-image: radial-gradient(100% 72% at 42% 45%, #000 14%, transparent 76%);
   mask-image: radial-gradient(100% 72% at 42% 45%, #000 14%, transparent 76%);
 }
@@ -262,9 +123,7 @@
 /* 已删除：`.hero__spotlight`（鼠标跟随的暖色聚光，2026-10-09）。
    它是 `radial-gradient(320px circle at var(--mx) var(--my))`，而把指针位置
    写进 CSS 变量会让浏览器**整个元素重新解析渐变并重绘** —— 这一层的面积是
-   整个首屏（约 1600×900），于是每次鼠标移动都触发一次全屏区域的重绘，
-   首屏上还压着画作与四层遮罩。收益（一层很淡的暖光）远抵不上这笔开销，
-   而且是"动鼠标就掉帧"这种最容易被感知到的卡顿。
+   整个首屏（约 1600×900），于是每次鼠标移动都触发一次全屏区域的重绘。
    要恢复：在 Hero.tsx 里加回 `.hero__spotlight` 那个 div 与 pointermove
    监听，并把这段 CSS 贴回来。 */
 
@@ -315,9 +174,10 @@
   margin-bottom: var(--sp-5);
   font-family: var(--font-display);
   font-size: var(--fs-hero);
-  font-weight: 450;
+  font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.028em;
+  /* 深墨压在白纱上：一点点白色外发光把字从云的高频纹理里"抬"出来 */
   text-shadow: var(--heading-glow);
   text-wrap: balance;
 }
@@ -364,7 +224,7 @@
   background: var(--accent);
 }
 
-/* SCENE 小字：参考站左下角那行，这里让它承载真实信息（主题 + 时间）。
+/* SCENE 小字：参考站左下角那行，这里让它承载真实信息（场景 + 时间）。
    它钉在首屏最底边，是全页最小的一行字 —— 不要给它图标，也不要有第二行。 */
 .hero__scene {
   color: var(--fg-3);
@@ -372,7 +232,7 @@
   letter-spacing: 0.14em;
 }
 
-/* ── 右下玻璃 PROFILE 卡 ─────────────────────────────────────────────── */
+/* ── 右下玻璃卡 ──────────────────────────────────────────────────────── */
 .hero__card {
   grid-column: 2;
   grid-row: 1;
@@ -382,15 +242,13 @@
   justify-self: end;
   width: 100%;
   padding: var(--sp-5);
-  /* 参考站那种"看得见画"的玻璃。透明度用户指定"70% 以上"，这里定 72%（alpha 0.28）。
-     底色从主题的 --ink-900 派生而不是直接用 --glass-bg ——
-     后者在两套主题里的 alpha 不一致（dusk 0.46 / day 0.72），
-     直接乘系数会让白昼主题反而更实。这里两套主题都是同一个透明度。
-     模糊留着（--glass-blur 18px）：它把背后的画揉开，文字才不会踩在花的细节上。 */
-  background: var(--glass-bg);
-  background: color-mix(in srgb, var(--ink-900) 28%, transparent);
-  /* 底变透之后边就得稍微硬一点，否则嵌在亮云里没有轮廓 */
-  border-color: var(--line-3);
+  /* ⚠️ 这 62% 是被背景逼出来的，不是审美选择：
+     卡片落在画面右侧那一带（亮云，相对亮度可以到 0.9），透明度过高时
+     --fg-2 / --fg-3 会掉到 2:1 上下。62% 实白压在亮云之上还剩 ≈0.85，
+     深墨正文稳稳过 7:1；再低就开始飘。
+     模糊留着（--glass-blur 18px）：它把背后的云揉开，文字才不会踩在花的细节上。 */
+  background: color-mix(in srgb, var(--ink-700) 62%, transparent);
+  border-color: var(--line-2);
 }
 
 .hero__card-label {
@@ -408,7 +266,7 @@
 .hero__card-name {
   font-family: var(--font-display);
   font-size: 1.7rem;
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.15;
 }

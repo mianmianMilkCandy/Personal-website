@@ -83,9 +83,13 @@
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r-3);
-  /* 卡片底走 50% 透明度（此前是 --ink-700 实色），让区块背景画透上来 */
+  /* 卡片底走 68% 透明度（原来是 50%）。这一面**整屏就是这一张卡**，
+     高度贴着 5%~94%，背后又正好是列车经过的那一带 —— 50% 时卡片里的
+     正文（--fg-2）压在亮云上只有 3.5:1 上下。68% 是"正文达标"与
+     "列车还能从卡片后面透出个影子"之间的取值：再实一点列车就没了，
+     再透一点字就开始飘。 */
   background: var(--ink-700);
-  background: color-mix(in srgb, var(--ink-700) 50%, transparent);
+  background: color-mix(in srgb, var(--ink-700) 68%, transparent);
   transition: border-color var(--dur-2) var(--ease-out);
 }
 

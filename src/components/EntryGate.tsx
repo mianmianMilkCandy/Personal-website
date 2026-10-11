@@ -6,8 +6,9 @@ import './EntryGate.css'
 
 /** 记录"已经进过站"，避免每次访问都挡一层。 */
 const GATE_KEY = 'site-entered'
-/** 复用整页氛围层那张 0.7 KB 小图当幕屏背景（它本来就是糊的）。 */
-const GATE_BG = asset('media/ambient-blur.webp')
+/** 幕屏背景复用连续背景那张底图（首屏本来就要拉它，这里等于零额外请求，
+ *  而且门上看到的就是门后那片天）。 */
+const GATE_BG = asset('media/sky-plate.webp')
 
 function shouldShowGate(): boolean {
   // 系统要求减少动效 → 直接跳过这层纯装饰的幕屏，不让它挡路

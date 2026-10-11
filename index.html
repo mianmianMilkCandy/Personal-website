@@ -1,21 +1,17 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dusk">
+<html lang="zh-CN" data-theme="day">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#0a1220" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#8fc3e6" />
 
-    <!-- 主题必须在样式生效前定下来，否则首屏会先闪一下另一个主题。
+    <!-- 主题在样式生效前定下来，否则首屏会先闪一下另一套令牌。
+         2026-10 起只有一套主题（晴空白昼），所以这里不再读 localStorage：
+         用户上次存的 'dusk' 不该再把页面变回深色。
          这一段是内联同步脚本，不能改成模块（模块是延迟执行的）。 -->
     <script>
-      try {
-        var t = localStorage.getItem('site-theme')
-        document.documentElement.dataset.theme =
-          t === 'day' || t === 'dusk' ? t : 'dusk'
-      } catch (e) {
-        document.documentElement.dataset.theme = 'dusk'
-      }
+      document.documentElement.dataset.theme = 'day'
     </script>
 
     <title>云绵绵甜奶糖 · Python 后端 / AI 应用开发</title>
@@ -33,25 +29,22 @@
       href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap"
     />
 
-    <!-- 首屏画作预加载。两条 preload 的 media 必须与 Hero.tsx 里 <picture> 的
-         <source media> 完全一致 —— 否则会给用竖版的视口白拉一张横版大图。
+    <!-- 连续背景的两张图预加载：它们**首屏就可见**，而首屏的 LCP 元素就是
+         这块天空。底图 371 KB / 列车精灵 238 KB，都在 show 出来之前就得开始拉。
          地址**必须带 %BASE_URL%**（vite.config.ts 里 base: './'）：写成 '/media/…'
-         在子目录部署（GitHub Pages 的 /repo/ 路径）下会 404，白拉两张、白报两条错。 -->
+         在子目录部署（GitHub Pages 的 /repo/ 路径）下会 404。 -->
     <link
       rel="preload"
       as="image"
-      href="%BASE_URL%media/hero-cat.webp"
+      href="%BASE_URL%media/sky-plate.webp"
       type="image/webp"
       fetchpriority="high"
-      media="(min-width: 901px) and (min-aspect-ratio: 1/1)"
     />
     <link
       rel="preload"
       as="image"
-      href="%BASE_URL%media/hero-cat-portrait.webp"
+      href="%BASE_URL%media/sky-train.webp"
       type="image/webp"
-      fetchpriority="high"
-      media="(max-width: 900px), (max-aspect-ratio: 1/1)"
     />
   </head>
   <body>
