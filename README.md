@@ -64,19 +64,4 @@
     └── styles/             tokens.css（设计令牌）· base.css · art-scrim.css
 ```
 
-## 本地运行
-
-```bash
-npm install
-npm run dev      # 开发预览 → http://localhost:5173
-npm run build    # 安全构建 → dist/
-npm run preview  # 预览构建产物
-```
-
-产物是纯静态的，任意静态服务器可直接托管 `dist/`：
-
-```bash
-python -m http.server 5174 --directory dist
-```
-
 > 开发与维护约定（设计令牌细节、性能纪律、构建回退机制、设计决策与踩坑记录）见 [DEVELOPMENT.md](DEVELOPMENT.md)。
